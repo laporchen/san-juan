@@ -1,5 +1,4 @@
 #pragma once
-
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
@@ -14,6 +13,7 @@
 #define u32 uint32_t
 #define i64 int64_t
 #define u64 uint64_t
+#define CLEAN printf("\e[1;1H\e[2J");
 
 typedef char string[200];
 
@@ -48,9 +48,9 @@ typedef struct _player
 
 
 
-
-
-
+void init();
 void menu();
+void about();
+void setting();
 void mainGame();
 void GameEnd();
