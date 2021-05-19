@@ -37,8 +37,8 @@ typedef struct _role
 {
     u8 id;
     string roleName;
-    string ability;
-    string privilege;
+    string desription;
+    void(*effect);
 } role;
 
 typedef struct _player
@@ -54,14 +54,21 @@ typedef struct _player
 } player;
 
 
-
+//general functions
 void init(u8);
 void menu();
 void about();
 void setting();
 void mainGame();
 void GameEnd();
-void printPlayerStatus(player);
+void printPlayerStatus(player*);
 void shuffle();
 void draw(player*);
 void readDes(player,u8);
+void chooseRole(u8 goveror);
+//role functions
+void builder(u8 goveror);
+void producer(u8 goveror);
+void trader(u8 goveror);
+void councilor(u8 goveror);
+void prospector(u8 goveror);
