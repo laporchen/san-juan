@@ -98,6 +98,9 @@ const string cardDescription[2][30] = {{"\nproducer phase\nowner produces 1 indi
                                         "\ngame end\nAt game end, the owner of a city hall scores 1 victory point for each violet building\nin his play area.\n",
                                         "\ngame end\nAt game end, the owner of a triumphal arch scores victory points(VP) for the monuments\nin hisplay area: for 1 monument he scores 4 VP, for 2 monument she scores 6 VP,\nand for 3 monuments he scores 8 VP.\n",
                                         "\ngame end\nAt game end, the owner of a palace scores an extra 1/4 of his victory points\n"}};
+const string CPUdraw[2][2] = {{"CPU ", " drawed.\n"}, {"CPU ", " 抽了卡\n"}};
+const string chosedCard[2] = {"Chosed ", "選擇 "};
+const string drew[2] = {"You drew ","你抽到了 "};
 //card-------------------------------------------------------------------------
 
 //textLanguage-----------------------------------------------------------------
@@ -116,13 +119,17 @@ string chooseRoleText[2] = {{"Choose a role\n1)Builder\n2)Producer\n3)Trader\n4)
 string inspectRole[2] = {{"Choose an action\n1)Confirm\n2)See the ability\n3)back\n"},
                          {"選擇行動\n1)確認\n2)檢視能力\n3)返回\n"}};
 //textLanguage-----------------------------------------------------------------
-u8 language = 0;
+u8 language = 1;
 u8 drawCnt = 0;
+u8 playercnt = -1;
+
 void (*menuFunc[3])() = {mainGame, about, setting};
 void (*roleFunc[5])(u8 governor) = {builder, producer, trader, councilor, prospector};
+
 role roles[5] = {0};
 player players[4] = {0};
 card deck[110] = {0};
+
 void menu()
 {
     setbuf(stdin, NULL);
@@ -161,7 +168,7 @@ void init(u8 playercount)
         strncpy(roles[i].roleName, roleName[language][i], sizeof(string));
         roles[i].effect = roleFunc[i];
     }
-    for (i32 i = 0; i < 4; i++)
+    for (i32 i = 0; i < playercount; i++)
     {
         memset(&players[i], 0, sizeof(player));
         players[i].maxCard = 7;
@@ -185,22 +192,15 @@ void init(u8 playercount)
             index++;
         }
     }
-    for (i32 i = 0; i <= playercount; i++)
+    for (i32 i = 0; i < playercount; i++)
     {
-        players[i].cardCount = 4;
         deck[i].place = 3;
         players[i].board[0] = deck[i];
         players[i].boardCount = 1;
         memset(&deck[i], 0, sizeof(card));
     }
     shuffle();
-    /* for (int i = 0; i < 110; i++)
-    {
-        if(deck[i].place != 1)
-            continue;
-        printf("Card:%s\n%s\n\n", deck[i].cardName, deck[i].description);
-    } */
-    for (i32 i = 0; i <= playercount; i++)
+    for (i32 i = 0; i < playercount; i++)
     {
         players[i].cardCount = 0;
         for (i32 j = 0; j < 4; j++)
@@ -212,16 +212,17 @@ void init(u8 playercount)
 }
 void mainGame()
 {
-    u8 playercnt = -1;
+
     printf("%s", gamestart[language]);
     scanf("%hhd", &playercnt);
-    while ((playercnt > 4 || playercnt < 0))
+    while ((playercnt > 3 || playercnt < 1))
     {
         setbuf(stdin, NULL);
         playercnt = -1;
         printf("%s", invalid[language]);
         scanf("%hhd", &playercnt);
     }
+    playercnt++;
     CLEAN
     setbuf(stdin, NULL);
     init(playercnt);
@@ -266,7 +267,6 @@ void printPlayerStatus(player *p)
     u8 choice = -1;
     while (choice != 4)
     {
-        CLEAN
         printf("%s", actionMenu[language]);
         choice = -1;
         scanf("%hhd", &choice);
@@ -427,8 +427,7 @@ void shuffle()
 }
 void draw(player *p)
 {
-    if (drawCnt == 110)
-        return;
+    drawCnt = 0;
     while (deck[drawCnt].place != 1)
         drawCnt++;
     deck[drawCnt].place = 2;
@@ -440,6 +439,9 @@ void draw(player *p)
     memset(&deck[drawCnt], 0, sizeof(card));
     drawCnt++;
     return;
+}
+void recycleCard(u8 player, u8 card)
+{
 }
 void chooseRole(u8 goveror)
 {
@@ -474,12 +476,12 @@ void chooseRole(u8 goveror)
             setbuf(stdin, NULL);
             if (choice2 == 1)
             {
-                roleFunc[choice-1](goveror);
+                roleFunc[choice - 1](goveror);
                 return;
             }
             if (choice2 == 2)
             {
-                printf("%s\n", roles[choice-1].desription);
+                printf("%s\n", roles[choice - 1].desription);
             }
             if (choice2 == 3)
                 break;
@@ -498,10 +500,64 @@ void trader(u8 goveror)
 }
 void councilor(u8 goveror)
 {
+
+    u8 a = goveror;
+    for (i32 i = 0; i < playercnt; i++)
+    {
+        u8 cardsToChoose[10] = {-1};
+        if (a == 0)
+        {
+            u8 cnt = 2;
+            if (goveror == a)
+                cnt = 5;
+            drawCnt = 0;
+            for (i32 j = 0; j < cnt + players[0].councilorExtraDraw; j++)
+            {
+                while (deck[drawCnt].place != 1)
+                    drawCnt++;
+                cardsToChoose[j] = drawCnt;
+                printf("%d)%s\n", j + 1, deck[drawCnt].cardName);
+                drawCnt++;
+            }
+            printf("%s\n", chosedCard[language]);
+            u8 choice = -1;
+            scanf("%hhd", &choice);
+
+            while (choice > cnt + players[0].councilorExtraDraw || choice < 1)
+            {
+                setbuf(stdin, NULL);
+                choice = -1;
+                printf("%s", invalid[language]);
+                scanf("%hhd", &choice);
+            }
+            card tmp = deck[cardsToChoose[choice - 1]];
+            memset(&deck[cardsToChoose[choice - 1]], 0, sizeof(card));
+            tmp.place = 2;
+            u32 emptyCard = 0;
+            while (players[0].hand[emptyCard].place == 2)
+                emptyCard++;
+            players[0].hand[emptyCard] = tmp;
+            players[0].cardCount++;
+
+            shuffle();
+        }
+        else
+        {
+            drawCnt = 0;
+            while (deck[drawCnt].place != 1)
+                drawCnt++;
+            printf("%s %d %s%s\n", CPUdraw[language][0], a, chosedCard[language], deck[drawCnt].cardName);
+            draw(&players[a]);
+        }
+        a++;
+        a %= playercnt;
+    }
 }
 void prospector(u8 goveror)
 {
-    printf("%d\n", goveror);
+    while (deck[drawCnt].place != 1)
+                    drawCnt++;
+    printf("%s%s\n", drew[language], deck[drawCnt].cardName);
     draw(&players[goveror]);
     return;
 }

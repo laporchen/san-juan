@@ -14,6 +14,8 @@
 #define i64 int64_t
 #define u64 uint64_t
 #define CLEAN printf("\e[1;1H\e[2J");
+#define PRINTDECK for (i32 i = 0; i < 110;i++)\
+                {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
 
 typedef char string[600];
 
@@ -50,6 +52,7 @@ typedef struct _player
     card board[15];
     u8 point;
     u8 playerOrder;
+    u8 councilorExtraDraw;
     void(*func);
 } player;
 
@@ -64,6 +67,7 @@ void GameEnd();
 void printPlayerStatus(player*);
 void shuffle();
 void draw(player*);
+void recycleCard(u8 player,u8 card);
 void readDes(player,u8);
 void chooseRole(u8 goveror);
 //role functions
