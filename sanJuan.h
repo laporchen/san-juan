@@ -16,7 +16,6 @@
 #define CLEAN printf("\e[1;1H\e[2J");
 #define PRINTDECK for (i32 i = 0; i < 110;i++)\
                 {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
-
 typedef char string[600];
 
 typedef struct _card
@@ -68,11 +67,43 @@ void printPlayerStatus(player*);
 void shuffle();
 void draw(player*);
 void recycleCard(u8 player,u8 card);
-void readDes(player,u8);
+void readDes(u8,u8);
+void printPlayerCard(u8 p);
 void chooseRole(u8 goveror);
+u8 chooseAction(u8 p);
 //role functions
 void builder(u8 goveror);
 void producer(u8 goveror);
 void trader(u8 goveror);
 void councilor(u8 goveror);
 void prospector(u8 goveror);
+//card functions
+void indigo(u8 cardowner);
+void sugar(u8 cardowner);
+void tobacco(u8 cardowner);
+void coffee(u8 cardowner);
+void silver(u8 cardowner);
+void tower(u8 cardowner);
+void chapel(u8 cardowner);
+void smithy(u8 cardowner);
+void poorHouse(u8 cardowner);
+void blackMarket(u8 cardowner);
+void crane(u8 cardowner);
+void carpenter(u8 cardowner);
+void quarry(u8 cardowner);
+void well(u8 cardowner);
+void aqueduct(u8 cardowner);
+void marketStand(u8 cardowner);
+void marketHall(u8 cardowner);
+void tradingPost(u8 cardowner);
+void archive(u8 cardowner);
+void perfecture(u8 cardowner);
+void goldMine(u8 cardowner);
+void library(u8 cardowner);
+void statue(u8 cardowner);
+void victoryColumn(u8 cardowner);
+void hero(u8 cardowner);
+void guildHall(u8 cardowner);
+void cityHall(u8 cardowner);
+void triumhalArch(u8 cardowner);
+void palace(u8 cardowner);

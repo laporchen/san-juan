@@ -100,7 +100,16 @@ const string cardDescription[2][30] = {{"\nproducer phase\nowner produces 1 indi
                                         "\ngame end\nAt game end, the owner of a palace scores an extra 1/4 of his victory points\n"}};
 const string CPUdraw[2][2] = {{"CPU ", " drawed.\n"}, {"CPU ", " 抽了卡\n"}};
 const string chosedCard[2] = {"Chosed ", "選擇 "};
-const string drew[2] = {"You drew ","你抽到了 "};
+const string chosed[2] = {"You chosed", "你選擇了"};
+const string drew[2] = {"You drew ", "你抽到了 "};
+const string whatToBuild[2] = {"Choose a building to build.\n", "選擇一個建築來建造\n"};
+const string built[2] = {"built", "建造"};
+const string nobuild[2] = {"chosed to not build anything\n", "決定不蓋建築\n"};
+const string costText[2] = {"Cost", "費用"};
+const string notEnoughCard[2] = {"You don't have enough cost.\n", "手牌不足以負擔費用\n"};
+const string whatToPay[2] = {"Choose a card to pay the building.", "選擇1張牌來支付建築"};
+const string pass[2] = {"You pass.\n", "你選擇跳過\n"};
+const string passChoice[2] = {"Pass", "跳過"};
 //card-------------------------------------------------------------------------
 
 //textLanguage-----------------------------------------------------------------
@@ -125,7 +134,35 @@ u8 playercnt = -1;
 
 void (*menuFunc[3])() = {mainGame, about, setting};
 void (*roleFunc[5])(u8 governor) = {builder, producer, trader, councilor, prospector};
-
+void (*cardFunc[])(u8 owner) = {indigo,
+                                sugar,
+                                tobacco,
+                                coffee,
+                                silver,
+                                tower,
+                                chapel,
+                                smithy,
+                                poorHouse,
+                                blackMarket,
+                                crane,
+                                carpenter,
+                                quarry,
+                                well,
+                                aqueduct,
+                                marketStand,
+                                marketHall,
+                                tradingPost,
+                                archive,
+                                perfecture,
+                                goldMine,
+                                library,
+                                statue,
+                                victoryColumn,
+                                hero,
+                                guildHall,
+                                cityHall,
+                                triumhalArch,
+                                palace};
 role roles[5] = {0};
 player players[4] = {0};
 card deck[110] = {0};
@@ -264,79 +301,15 @@ void setting()
 }
 void printPlayerStatus(player *p)
 {
-    u8 choice = -1;
-    while (choice != 4)
+    while (1)
     {
         printf("%s", actionMenu[language]);
-        choice = -1;
-        scanf("%hhd", &choice);
-        while ((choice > 4 || choice < 1))
-        {
-            setbuf(stdin, NULL);
-            choice = -1;
-            printf("%s", invalid[language]);
-            scanf("%hhd", &choice);
-        }
-        CLEAN
-        setbuf(stdin, NULL);
-        if (choice == 4)
+        if (chooseAction(0))
             break;
-        if (choice == 1)
-        {
-            for (int i = 0; i < p->cardCount; i++)
-            {
-                printf("%d)%s\n", i + 1, p->hand[i].cardName);
-            }
-            printf("\n");
-            printf("%s", cardInspect[language]);
-            u8 choice2 = -1;
-            scanf("%hhd", &choice2);
-            while ((choice2 > 2 || choice2 < 1))
-            {
-                setbuf(stdin, NULL);
-                choice2 = -1;
-                printf("%s", invalid[language]);
-                scanf("%hhd", &choice2);
-            }
-            CLEAN
-            setbuf(stdin, NULL);
-            if (choice2 == 1)
-            {
-                readDes(players[0], 0);
-            }
-        }
-        if (choice == 2)
-        {
-            for (int i = 0; i < p->boardCount; i++)
-            {
-                printf("%d)%s\n", i + 1, p->board[i].cardName);
-            }
-            printf("\n");
-            printf("%s", cardInspect[language]);
-            u8 choice2 = -1;
-            scanf("%hhd", &choice2);
-            while ((choice2 > 2 || choice2 < 1))
-            {
-                setbuf(stdin, NULL);
-                choice2 = -1;
-                printf("%s", invalid[language]);
-                scanf("%hhd", &choice2);
-            }
-            CLEAN
-            setbuf(stdin, NULL);
-            if (choice2 == 1)
-            {
-                readDes(players[0], 1);
-            }
-        }
-        if (choice == 3)
-        {
-            chooseRole(0);
-        }
     }
     return;
 }
-void readDes(player p, u8 mode)
+void readDes(u8 p, u8 mode)
 {
     CLEAN
     if (mode)
@@ -345,9 +318,9 @@ void readDes(player p, u8 mode)
         i8 choice = -2;
         while (1)
         {
-            for (i32 i = 0; i < p.boardCount; i++)
+            for (i32 i = 0; i < players[p].boardCount; i++)
             {
-                printf("%d)%s\n", i + 1, p.board[i].cardName);
+                printf("%d)%s\n", i + 1, players[p].board[i].cardName);
             }
             printf("%s", chooseCard[language]);
             choice = -2;
@@ -355,7 +328,7 @@ void readDes(player p, u8 mode)
 
             if (choice == -1)
                 break;
-            while ((choice > p.boardCount || choice < 1))
+            while ((choice > players[p].boardCount || choice < 1))
             {
                 setbuf(stdin, NULL);
                 choice = -2;
@@ -367,7 +340,7 @@ void readDes(player p, u8 mode)
             CLEAN
             if (choice == -1)
                 break;
-            printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", p.board[choice - 1].cardName, p.board[choice - 1].cost, p.board[choice - 1].vp, p.board[choice - 1].description);
+            printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", players[p].board[choice - 1].cardName, players[p].board[choice - 1].cost, players[p].board[choice - 1].vp, players[p].board[choice - 1].description);
 
             setbuf(stdin, NULL);
         }
@@ -376,9 +349,9 @@ void readDes(player p, u8 mode)
     {
         while (1)
         {
-            for (i32 i = 0; i < p.cardCount; i++)
+            for (i32 i = 0; i < players[p].cardCount; i++)
             {
-                printf("%d)%s\n", i + 1, p.hand[i].cardName);
+                printf("%d)%s\n", i + 1, players[p].hand[i].cardName);
             }
             i8 choice = -2;
             printf("%s", chooseCard[language]);
@@ -387,7 +360,7 @@ void readDes(player p, u8 mode)
 
             if (choice == -1)
                 break;
-            while ((choice > p.cardCount || choice < 1))
+            while ((choice > players[p].cardCount || choice < 1))
             {
                 setbuf(stdin, NULL);
                 choice = -2;
@@ -400,9 +373,9 @@ void readDes(player p, u8 mode)
             if (choice == -1)
                 break;
             if (language)
-                printf("\t%s\n費用:%d\n勝利點數:%d\n\n%s", p.hand[choice - 1].cardName, p.hand[choice - 1].cost, p.hand[choice - 1].vp, p.hand[choice - 1].description);
+                printf("\t%s\n費用:%d\n勝利點數:%d\n\n%s", players[p].hand[choice - 1].cardName, players[p].hand[choice - 1].cost, players[p].hand[choice - 1].vp, players[p].hand[choice - 1].description);
             else
-                printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", p.hand[choice - 1].cardName, p.hand[choice - 1].cost, p.hand[choice - 1].vp, p.hand[choice - 1].description);
+                printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", players[p].hand[choice - 1].cardName, players[p].hand[choice - 1].cost, players[p].hand[choice - 1].vp, players[p].hand[choice - 1].description);
 
             setbuf(stdin, NULL);
         }
@@ -440,8 +413,26 @@ void draw(player *p)
     drawCnt++;
     return;
 }
-void recycleCard(u8 player, u8 card)
+void recycleCard(u8 p, u8 chosedCard)
 {
+    drawCnt = 0;
+    while (deck[drawCnt].place != 0)
+        drawCnt++;
+    deck[drawCnt] = players[p].hand[chosedCard];
+    card empty = {0};
+    players[p].hand[chosedCard] = empty;
+    players[p].hand[chosedCard] = players[p].hand[players[p].cardCount - 1]; //take player's last card and place it in the empty spot
+    players[p].hand[players[p].cardCount - 1] = empty;
+    players[p].cardCount--;
+    return;
+}
+void printPlayerCard(u8 p)
+{
+    for (i32 i = 0; i < players[p].cardCount; i++)
+    {
+        printf("%d)%s %s %d\n", i + 1, players[p].hand[i].cardName, costText[language], players[p].hand[i].cost);
+    }
+    return;
 }
 void chooseRole(u8 goveror)
 {
@@ -488,9 +479,182 @@ void chooseRole(u8 goveror)
         }
     }
 }
+u8 chooseAction(u8 p)
+{
+    u8 choice = -1;
+    scanf("%hhd", &choice);
+    while ((choice > 4 || choice < 1))
+    {
+        setbuf(stdin, NULL);
+        choice = -1;
+        printf("%s", invalid[language]);
+        scanf("%hhd", &choice);
+    }
+    CLEAN
+    setbuf(stdin, NULL);
+    if (choice == 4)
+        return 1;
+    if (choice == 1)
+    {
+        printPlayerCard(0);
+        printf("%s", cardInspect[language]);
+        u8 choice2 = -1;
+        scanf("%hhd", &choice2);
+        while ((choice2 > 2 || choice2 < 1))
+        {
+            setbuf(stdin, NULL);
+            choice2 = -1;
+            printf("%s", invalid[language]);
+            scanf("%hhd", &choice2);
+        }
+        CLEAN
+        setbuf(stdin, NULL);
+        if (choice2 == 1)
+        {
+            readDes(0, 0);
+        }
+    }
+    if (choice == 2)
+    {
+        for (int i = 0; i < players[p].boardCount; i++)
+        {
+            printf("%d)%s\n", i + 1, players[p].board[i].cardName);
+        }
+        printf("\n");
+        printf("%s", cardInspect[language]);
+        u8 choice2 = -1;
+        scanf("%hhd", &choice2);
+        while ((choice2 > 2 || choice2 < 1))
+        {
+            setbuf(stdin, NULL);
+            choice2 = -1;
+            printf("%s", invalid[language]);
+            scanf("%hhd", &choice2);
+        }
+        CLEAN
+        setbuf(stdin, NULL);
+        if (choice2 == 1)
+        {
+            readDes(0, 1);
+        }
+    }
+    if (choice == 3)
+    {
+        chooseRole(0);
+    }
+    return 0;
+}
 //role functions
 void builder(u8 goveror)
 {
+    u8 nowPlaying = goveror;
+    for (i32 c = 0; c < playercnt; c++)
+    {
+        u8 costdown = 0;
+        if (nowPlaying == goveror)
+            costdown = 1;
+        if (nowPlaying == 0)
+        {
+            printPlayerCard(nowPlaying);
+            printf("%d)%s\n",players[nowPlaying].cardCount + 1,passChoice[language]);
+            u8 choice = -1;
+            printf("%s", whatToBuild[language]);
+            
+            scanf("%hhd", &choice);
+            u8 canPlay = players[nowPlaying].cardCount > (players[nowPlaying].hand[choice - 1].cost - costdown);
+            while (choice > players[nowPlaying].cardCount + 1 || choice < 1 || !canPlay)
+            {
+                if (!canPlay)
+                    printf("%s", notEnoughCard[language]);
+                else
+                    printf("%s", invalid[language]);
+                setbuf(stdin, NULL);
+                choice = -1;
+                scanf("%hhd", &choice);
+                if (!(choice > players[nowPlaying].cardCount + 1 || choice < 1))
+                    canPlay = players[nowPlaying].cardCount > (players[nowPlaying].hand[choice - 1].cost - costdown);
+            }
+            CLEAN
+            if (!players[nowPlaying].cardCount + 1 == choice)
+            {
+                u8 played = choice - 1;
+                i8 cardCost = players[nowPlaying].hand[choice - 1].cost - costdown;
+                if (cardCost < 1)
+                    cardCost = 1;
+                u8 emptySlot = 0;
+                while (players[nowPlaying].board[emptySlot].place != 0)
+                    emptySlot++;
+                players[nowPlaying].board[emptySlot] = players[nowPlaying].hand[played];
+                card empty = {0};                                                                               //to reset moved card
+                players[nowPlaying].hand[played] = empty;                                                       //reset moved last card
+                players[nowPlaying].hand[played] = players[nowPlaying].hand[players[nowPlaying].cardCount - 1]; //take player's last card and place it in the empty spot
+                players[nowPlaying].hand[players[nowPlaying].cardCount - 1] = empty;
+                players[nowPlaying].cardCount--;
+                for (i32 i = 0; i < cardCost; i++)
+                {
+                    printPlayerCard(nowPlaying);
+                    printf("%s (%d/%d)\n", whatToPay[language], i + 1, cardCost);
+                    u8 discard = -1;
+                    scanf("%hhd", &discard);
+                    while (discard > players[nowPlaying].cardCount || discard < 1)
+                    {
+                        printf("%s", invalid[language]);
+                        setbuf(stdin, NULL);
+                        discard = -1;
+                        scanf("%hhd", &discard);
+                    }
+                    recycleCard(nowPlaying, discard - 1);
+                    CLEAN
+                }
+                players[nowPlaying].boardCount++;
+                printf("%s %s\n", built[language], players[nowPlaying].board[emptySlot].cardName);
+            }
+            else
+            {
+                printf("%s", pass[language]);
+            }
+        }
+        else
+        {
+            i8 played = -1;
+            for (i32 i = 0; i < players[nowPlaying].cardCount; i++)
+            {
+                //printf("card count %d \n", players[nowPlaying].cardCount);
+                //printf("%d > %d\n", players[nowPlaying].cardCount, players[nowPlaying].hand[i].cost - costdown);
+                if (players[nowPlaying].cardCount > players[nowPlaying].hand[i].cost - costdown)
+                {
+                    played = i;
+                    break;
+                }
+            }
+            //printf("play %d\n", played);
+            if (played >= 0 && players[nowPlaying].cardCount != 0)
+            {
+                players[nowPlaying].hand[played].place = 3;
+                u8 emptySlot = 0;
+                while (players[nowPlaying].board[emptySlot].place != 0)
+                    emptySlot++;
+                players[nowPlaying].board[emptySlot] = players[nowPlaying].hand[played];
+                printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, built[language], players[nowPlaying].board[emptySlot].cardName);
+                i8 cardCost = players[nowPlaying].board[emptySlot].cost - costdown;
+                if (cardCost < 1)
+                    cardCost = 1;
+
+                card empty = {0};                         //to reset moved card
+                players[nowPlaying].hand[played] = empty; //reset moved last card
+                for (i32 i = 0; i < cardCost; i++)
+                    recycleCard(nowPlaying, i);
+                players[nowPlaying].cardCount--;
+                players[nowPlaying].boardCount++;
+            }
+            else
+            {
+                printf("%s %d %s", CPUdraw[language][0], nowPlaying, nobuild[language]);
+            }
+        }
+        nowPlaying++;
+        nowPlaying %= playercnt;
+    }
 }
 void producer(u8 goveror)
 {
@@ -501,14 +665,14 @@ void trader(u8 goveror)
 void councilor(u8 goveror)
 {
 
-    u8 a = goveror;
+    u8 nowPlaying = goveror;
     for (i32 i = 0; i < playercnt; i++)
     {
         u8 cardsToChoose[10] = {-1};
-        if (a == 0)
+        if (nowPlaying == 0)
         {
             u8 cnt = 2;
-            if (goveror == a)
+            if (goveror == nowPlaying)
                 cnt = 5;
             drawCnt = 0;
             for (i32 j = 0; j < cnt + players[0].councilorExtraDraw; j++)
@@ -538,26 +702,116 @@ void councilor(u8 goveror)
                 emptyCard++;
             players[0].hand[emptyCard] = tmp;
             players[0].cardCount++;
-
+            CLEAN
             shuffle();
+            printf("%s %s\n", chosed[language], players[0].hand[emptyCard].cardName);
         }
         else
         {
             drawCnt = 0;
             while (deck[drawCnt].place != 1)
                 drawCnt++;
-            printf("%s %d %s%s\n", CPUdraw[language][0], a, chosedCard[language], deck[drawCnt].cardName);
-            draw(&players[a]);
+            printf("%s %d %s%s\n", CPUdraw[language][0], nowPlaying, chosedCard[language], deck[drawCnt].cardName);
+            draw(&players[nowPlaying]);
         }
-        a++;
-        a %= playercnt;
+        nowPlaying++;
+        nowPlaying %= playercnt;
     }
 }
 void prospector(u8 goveror)
 {
     while (deck[drawCnt].place != 1)
-                    drawCnt++;
+        drawCnt++;
     printf("%s%s\n", drew[language], deck[drawCnt].cardName);
     draw(&players[goveror]);
     return;
+}
+
+//card functions
+void indigo(u8 cardowner)
+{
+}
+void sugar(u8 cardowner)
+{
+}
+void tobacco(u8 cardowner)
+{
+}
+void coffee(u8 cardowner)
+{
+}
+void silver(u8 cardowner)
+{
+}
+void tower(u8 cardowner)
+{
+}
+void chapel(u8 cardowner)
+{
+}
+void smithy(u8 cardowner)
+{
+}
+void poorHouse(u8 cardowner)
+{
+}
+void blackMarket(u8 cardowner)
+{
+}
+void crane(u8 cardowner)
+{
+}
+void carpenter(u8 cardowner)
+{
+}
+void quarry(u8 cardowner)
+{
+}
+void well(u8 cardowner)
+{
+}
+void aqueduct(u8 cardowner)
+{
+}
+void marketStand(u8 cardowner)
+{
+}
+void marketHall(u8 cardowner)
+{
+}
+void tradingPost(u8 cardowner)
+{
+}
+void archive(u8 cardowner)
+{
+}
+void perfecture(u8 cardowner)
+{
+}
+void goldMine(u8 cardowner)
+{
+}
+void library(u8 cardowner)
+{
+}
+void statue(u8 cardowner)
+{
+}
+void victoryColumn(u8 cardowner)
+{
+}
+void hero(u8 cardowner)
+{
+}
+void guildHall(u8 cardowner)
+{
+}
+void cityHall(u8 cardowner)
+{
+}
+void triumhalArch(u8 cardowner)
+{
+}
+void palace(u8 cardowner)
+{
 }
