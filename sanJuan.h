@@ -16,6 +16,7 @@
 #define CLEAN printf("\e[1;1H\e[2J");
 #define PRINTDECK for (i32 i = 0; i < 110;i++)\
                 {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
+#define DECKSIZE  110
 typedef char string[600];
 
 typedef struct _card
@@ -52,6 +53,7 @@ typedef struct _player
     u8 point;
     u8 playerOrder;
     u8 councilorExtraDraw;
+    u8 extraProduce;
     void(*func);
 } player;
 
@@ -66,11 +68,16 @@ void GameEnd();
 void printPlayerStatus(player*);
 void shuffle();
 void draw(player*);
-void recycleCard(u8 player,u8 card);
+void recycleCard();
+void discardCard(u8 p, u8 chosedCard);
 void readDes(u8,u8);
-void printPlayerCard(u8 p);
+void printPlayerCard(player*);
+void printPlayerBoard(player *);
 void chooseRole(u8 goveror);
 u8 chooseAction(u8 p);
+void produce(player *,u8 card);
+void sell(player *, u8 card,u8 price);
+void printCPUstatus(player*p);
 //role functions
 void builder(u8 goveror);
 void producer(u8 goveror);
