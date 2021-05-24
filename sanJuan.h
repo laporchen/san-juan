@@ -18,6 +18,7 @@
                 {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
 #define DECKSIZE  110
 #define GAMEEND 12
+#define INVALID printf("%s", invalid[language]);
 typedef char string[600];
 
 typedef struct _card
@@ -71,7 +72,7 @@ void printPlayerStatus(player*);
 void shuffle();
 void draw(player*);
 void recycleCard();
-void discardCard(u8 p, u8 chosedCard);
+void discardCard(player* p, u8 chosedCard);
 void readDes(u8,u8);
 void printPlayerCard(player*);
 void printPlayerBoard(player *);
@@ -82,18 +83,16 @@ void sell(player *, u8 card,u8 price);
 void printCPUstatus(player*p);
 void computerAction(player*p);
 void roleReset(role r[]);
+void reduceCard(player *p);
+u8 searchCard(player *p, u8 id);
+u8 searchBoard(player *p, u8 id);
 //role functions
-void builder(u8 goveror);
-void producer(u8 goveror);
-void trader(u8 goveror);
-void councilor(u8 goveror);
-void prospector(u8 goveror);
+void builder(player p[],u8 goveror);
+void producer(player p[],u8 goveror);
+void trader(player p[],u8 goveror);
+void councilor(player p[],u8 goveror);
+void prospector(player p[],u8 goveror);
 //card functions
-void indigo(u8 cardowner);
-void sugar(u8 cardowner);
-void tobacco(u8 cardowner);
-void coffee(u8 cardowner);
-void silver(u8 cardowner);
 void tower(u8 cardowner);
 void chapel(u8 cardowner);
 void smithy(u8 cardowner);
