@@ -17,6 +17,7 @@
 #define PRINTDECK for (i32 i = 0; i < 110;i++)\
                 {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
 #define DECKSIZE  110
+#define GAMEEND 12
 typedef char string[600];
 
 typedef struct _card
@@ -37,6 +38,7 @@ typedef struct _card
 
 typedef struct _role
 {
+    u8 used;
     u8 id;
     string roleName;
     string desription;
@@ -78,6 +80,8 @@ u8 chooseAction(u8 p);
 void produce(player *,u8 card);
 void sell(player *, u8 card,u8 price);
 void printCPUstatus(player*p);
+void computerAction(player*p);
+void roleReset(role r[]);
 //role functions
 void builder(u8 goveror);
 void producer(u8 goveror);
