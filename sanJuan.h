@@ -4,7 +4,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "time.h"
-
+#include <unistd.h>
 #define i8 int8_t
 #define u8 uint8_t
 #define i16 int16_t
@@ -14,16 +14,22 @@
 #define i64 int64_t
 #define u64 uint64_t
 #define CLEAN printf("\e[1;1H\e[2J");
-#define PRINTDECK for (i32 i = 0; i < 110;i++)\
-                {printf("%s %d %d\n", deck[i].cardName, i,deck[i].place);}
-#define DECKSIZE  110
+#define PRINTDECK                                                 \
+    for (i32 i = 0; i < 110; i++)                                 \
+    {                                                             \
+        printf("%s %d %d\n", deck[i].cardName, i, deck[i].place); \
+    }
+#define DECKSIZE 110
 #define GAMEEND 12
 #define INVALID printf("%s", invalid[language]);
+#define SLEEP nanosleep((const struct timespec[]){{0, 600000000L}}, NULL);;
 typedef char string[600];
+
+
 
 typedef struct _card
 {
-    u8 place; //3 : onBoard 2 : inHand 1 : inDeck 0 : discard 
+    u8 place; //3 : onBoard 2 : inHand 1 : inDeck 0 : discard
     u8 played;
     u8 id;
     string cardName;
@@ -34,7 +40,6 @@ typedef struct _card
     u8 vp;
     u8 hasProduct;
     u8 extraValue;
-    void(*cardFunc);
 } card;
 
 typedef struct _role
@@ -43,7 +48,6 @@ typedef struct _role
     u8 id;
     string roleName;
     string desription;
-    void(*effect);
 } role;
 
 typedef struct _player
@@ -57,9 +61,10 @@ typedef struct _player
     u8 playerOrder;
     u8 councilorExtraDraw;
     u8 extraProduce;
-    void(*func);
+    u8 extraCostdown;
+    u8 extraTrade;
+    u8 extraCard;
 } player;
-
 
 //general functions
 void init(u8);
@@ -68,44 +73,44 @@ void about();
 void setting();
 void mainGame();
 void GameEnd();
-void printPlayerStatus(player*);
+void printPlayerStatus(player *);
 void shuffle();
-void draw(player*);
+void draw(player *);
 void recycleCard();
-void discardCard(player* p, u8 chosedCard);
-void readDes(u8,u8);
-void printPlayerCard(player*);
+void discardCard(player *p, u8 chosedCard);
+void readDes(u8, u8);
+void printPlayerCard(player *);
 void printPlayerBoard(player *);
 void chooseRole(u8 goveror);
 u8 chooseAction(u8 p);
-void produce(player *,u8 card);
-void sell(player *, u8 card,u8 price);
-void printCPUstatus(player*p);
-void computerAction(player*p);
+void produce(player *, u8 card);
+void sell(player *, u8 card, u8 price);
+void printCPUstatus(player *p);
+void computerAction(player *p);
 void roleReset(role r[]);
 void reduceCard(player *p);
 u8 searchCard(player *p, u8 id);
 u8 searchBoard(player *p, u8 id);
 //role functions
-void builder(player p[],u8 goveror);
-void producer(player p[],u8 goveror);
-void trader(player p[],u8 goveror);
-void councilor(player p[],u8 goveror);
-void prospector(player p[],u8 goveror);
+void builder(player p[], u8 goveror);
+void producer(player p[], u8 goveror);
+void trader(player p[], u8 goveror);
+void councilor(player p[], u8 goveror);
+void prospector(player p[], u8 goveror);
 //card functions
-void tower(u8 cardowner);
-void chapel(u8 cardowner);
-void smithy(u8 cardowner);
-void poorHouse(u8 cardowner);
+void tower(player *p);
+void chapel(player *p);
+void smithy(player *p);
+void poorHouse(player *p);
 void blackMarket(u8 cardowner);
 void crane(u8 cardowner);
 void carpenter(u8 cardowner);
 void quarry(u8 cardowner);
 void well(u8 cardowner);
-void aqueduct(u8 cardowner);
+void aqueduct(player *p);
 void marketStand(u8 cardowner);
 void marketHall(u8 cardowner);
-void tradingPost(u8 cardowner);
+void tradingPost(player *p);
 void archive(u8 cardowner);
 void perfecture(u8 cardowner);
 void goldMine(u8 cardowner);
@@ -113,7 +118,7 @@ void library(u8 cardowner);
 void statue(u8 cardowner);
 void victoryColumn(u8 cardowner);
 void hero(u8 cardowner);
-void guildHall(u8 cardowner);
-void cityHall(u8 cardowner);
-void triumhalArch(u8 cardowner);
-void palace(u8 cardowner);
+void guildHall(player *p,u8 *vp);
+void cityHall(player *p,u8 *vp);
+void triumhalArch(player *p,u8 *vp);
+void palace(player *p ,u8 *vp);
