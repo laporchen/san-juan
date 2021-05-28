@@ -27,7 +27,7 @@ const string productName[2][5] = {{"\033[0;35mIndigo\033[0m", "\033[0;33mSugar\0
                                   {"\033[0;35m染料\033[0m", "\033[0;33m糖\033[0m", "\033[0;32m菸草\033[0m", "\033[0;34m咖啡\033[0m", "\033[0;36m白銀\033[0m"}};
 const string CPUdraw[2][2] = {{"CPU ", " drawed.\n"}, {"CPU ", " 抽了卡\n"}};
 const string chooseOne[2] = {"Choose one to keep", "選擇一張留下"};
-const string chosedCard[2] = {"Chosed ", "選擇 "};
+const string chosedCard[2] = {"Chosed ", "選擇"};
 const string chosed[2] = {"You chosed", "你選擇了"};
 const string drew[2] = {"You drew ", "你抽到了 "};
 const string whatToBuild[2] = {"Choose a building to build.\n", "選擇一個建築來建造\n"};
@@ -67,6 +67,7 @@ player players[4] = {0};
 card deck[DECKSIZE] = {0};
 card discard[DECKSIZE] = {0};
 u8 discardSize = 0;
+u8 discardDeckOrder = 0;
 void menu()
 {
     setbuf(stdin, NULL);
@@ -240,6 +241,7 @@ void mainGame()
     while (gameProgressing)
     {
         recycleCard();
+        //PRINTDECK
         roleReset(roles); //reset role
         //Check tower
         for (i32 i = 0; i < playercnt; i++)
@@ -474,21 +476,24 @@ void recycleCard()
             cnt++;
         newCnt = cnt + 1;
         deck[cnt] = discard[i];
+        deck[cnt].place = 1;
     }
+    discardSize = 0;
     shuffle();
 }
 void discardCard(player *p, u8 chosedCard)
 {
-    u8 cnt = 0;
     u8 cardCnt = p->cardCount;
-    while (discard[cnt].place != 0)
-        cnt++;
-    discard[cnt] = p->hand[chosedCard];
+    while (discard[discardDeckOrder].place != 0)
+        discardDeckOrder++;
+    discard[discardDeckOrder] = p->hand[chosedCard];
+    discard[discardDeckOrder].place = 0;
     card empty = {0};
     p->hand[chosedCard] = empty;
     p->hand[chosedCard] = p->hand[cardCnt - 1]; //take player's last card and place it in the empty spot
     p->hand[cardCnt - 1] = empty;
     p->cardCount--;
+    discardDeckOrder++;
     discardSize++;
     return;
 }
@@ -692,21 +697,30 @@ void reduceCard(player *p)
 {
     string reduce[2] = {"Please choose a card to discard.", "請選擇1張牌捨棄"};
     i8 max = p->maxCard;
+
     while (p->cardCount > max)
     {
-        u8 cardCnt = p->cardCount;
-        printf("%s (%d/%d)\n", reduce[language], cardCnt, max);
-        printPlayerCard(p);
-        u8 choice = -1;
-        scanf("%hhd", &choice);
-        while (choice > cardCnt || choice < 1)
+        if (p->playerOrder == 0)
         {
-            INVALID
-            choice = -1;
+            u8 cardCnt = p->cardCount;
+            printf("%s (%d/%d)\n", reduce[language], cardCnt, max);
+            printPlayerCard(p);
+            u8 choice = -1;
             scanf("%hhd", &choice);
+            while (choice > cardCnt || choice < 1)
+            {
+                INVALID
+                choice = -1;
+                scanf("%hhd", &choice);
+            }
+            discardCard(p, choice);
+            CLEAN
         }
-        discardCard(p, choice);
-        CLEAN
+        else
+        {
+            u8 choice = rand() % p->cardCount;
+            discardCard(p, choice);
+        }
     }
     return;
 }
@@ -723,27 +737,24 @@ u8 searchBoard(player *p, u8 id)
     for (i32 i = 0; i < p->boardCount; i++)
         if (p->board[i].id == id)
             cnt++;
-    if (cnt == 0)
-        return 255;
-    else
-        return cnt;
+    return cnt;
 }
+
 //role functions
 void builder(player p[], u8 goveror)
 {
-
     u8 nowPlaying = goveror;
     for (i32 c = 0; c < playercnt; c++)
     {
         if (nowPlaying == 0)
             printf("%s\n", yourTurn[language]);
         smithy(&p[nowPlaying]);
+        library(&p[nowPlaying]);
         u8 costdown = 0 + p[nowPlaying].extraCostdown;
         if (nowPlaying == goveror)
-            costdown += 1;
+            costdown += 1 * p[nowPlaying].library;
         if (nowPlaying == 0)
         {
-            printf("%s\n", yourTurn[language]);
             printPlayerCard(&p[nowPlaying]);
             printf("%d)%s\n", p[nowPlaying].cardCount + 1, passChoice[language]);
             u8 choice = -1;
@@ -830,11 +841,24 @@ void builder(player p[], u8 goveror)
                 if (cardCost < 1)
                     cardCost = 1;
 
-                card empty = {0};                   //to reset moved card
-                p[nowPlaying].hand[played] = empty; //reset moved last card
-                for (i32 i = 0; i < cardCost; i++)
-                    discardCard(&p[nowPlaying], i);
+                card empty = {0};                                                             //to reset moved card
+                p[nowPlaying].hand[played] = p[nowPlaying].hand[p[nowPlaying].cardCount - 1]; //reset moved last card
+                p[nowPlaying].hand[p[nowPlaying].cardCount - 1] = empty;
                 p[nowPlaying].cardCount--;
+                while (cardCost--)
+                {
+                    u8 cardToPay = 0;
+                    for (i32 c = cardToPay; c < p[nowPlaying].cardCount; c++)
+                    {
+
+                        if (p[nowPlaying].hand[c].place == 2)
+                        {
+                            cardToPay = c;
+                            break;
+                        }
+                    }
+                    discardCard(&p[nowPlaying], cardToPay);
+                }
                 p[nowPlaying].boardCount++;
             }
             else
@@ -855,14 +879,14 @@ void producer(player p[], u8 goveror)
         if (nowPlaying == 0)
             printf("%s\n", yourTurn[language]);
         aqueduct(&p[nowPlaying]);
+        library(&p[nowPlaying]);
         u8 extra = 0 + p[nowPlaying].extraProduce;
         if (nowPlaying == goveror)
         {
-            extra += 1;
+            extra += 1 * p[nowPlaying].library;
         }
         if (nowPlaying == 0)
         {
-            printf("%s\n", yourTurn[language]);
             u8 isProduce = 0;
             const string produceCount[2][2] = {{"You can produce", "products."}, {"你可以生產", "個商品"}};
             const string whatToProduce[2] = {"Choose a building to produce.", "選擇一個建築來進行生產"};
@@ -899,9 +923,12 @@ void producer(player p[], u8 goveror)
                         const string noProduce[2] = {"You produced nothing.", "你沒有生產"};
                         printf("%s\n", noProduce[language]);
                     }
-                    CLEAN
-                    printf("%s %s\n", produced[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
-                    produce(&p[nowPlaying], choice - 1);
+                    else
+                    {
+                        CLEAN
+                        printf("%s %s\n", produced[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
+                        produce(&p[nowPlaying], choice - 1);
+                    }
                 }
             }
         }
@@ -913,7 +940,7 @@ void producer(player p[], u8 goveror)
             {
                 for (i32 i = 0; i < p[nowPlaying].boardCount; i++)
                 {
-                    if (!p[nowPlaying].board[i].hasProduct && !p[nowPlaying].board[i].type)
+                    if (p[nowPlaying].board[i].id < 5 && !p[nowPlaying].board[i].hasProduct && !p[nowPlaying].board[i].type)
                     {
 
                         produce(&p[nowPlaying], i);
@@ -954,14 +981,15 @@ void trader(player p[], u8 goveror)
         if (nowPlaying == 0)
             printf("%s\n", yourTurn[language]);
         tradingPost(&p[nowPlaying]);
+        library(&p[nowPlaying]);
         u8 extra = 0 + p[nowPlaying].extraTrade;
         if (nowPlaying == goveror)
         {
-            extra += 1;
+            extra += 1 * p[nowPlaying].library;
         }
         if (nowPlaying == 0)
         {
-            printf("%s\n", yourTurn[language]);
+
             for (i32 j = 0; j < 1 + extra; j++)
             {
 
@@ -1030,60 +1058,68 @@ void trader(player p[], u8 goveror)
 }
 void councilor(player p[], u8 goveror)
 {
-    u8 drawCnt = 0;
     u8 nowPlaying = goveror;
     for (i32 i = 0; i < playercnt; i++)
     {
         if (nowPlaying == 0)
             printf("%s\n", yourTurn[language]);
+        perfecture(&p[nowPlaying]);
+        library(&p[nowPlaying]);
         u8 cardsToChoose[10] = {-1};
         u8 keepCard = 1 + p[nowPlaying].extraCard;
         if (nowPlaying == 0)
         {
-
-            u8 cnt = 2 + p[nowPlaying].councilorExtraDraw;
+            u8 cnt = 2;
             if (goveror == nowPlaying)
-                cnt += 3;
+                cnt += 3 * p[nowPlaying].library;
             if (cardLeftInDeck <= cnt)
                 recycleCard();
-            drawCnt = 0;
-            for (i32 j = 0; j < cnt + p[0].councilorExtraDraw; j++)
-            {
-                while (deck[drawCnt].place != 1)
-                    drawCnt++;
-                cardsToChoose[j] = drawCnt;
-                printf("%d)%s\n", j + 1, deck[drawCnt].cardName);
-                drawCnt++;
-            }
-            printf("%s\n", chooseOne[language]);
-            u8 choice = -1;
-            scanf("%hhd", &choice);
+            u8 drawCnt = 0;
 
-            while (choice > cnt || choice < 1)
+            for (i32 i = 0; i < 1 + p[nowPlaying].extraCard; i++)
             {
-                setbuf(stdin, NULL);
-                choice = -1;
-                INVALID
+                memset(cardsToChoose,255,sizeof(cardsToChoose));
+                for (i32 j = 0; j < cnt - i; j++)
+                {
+                    while (deck[drawCnt].place != 1)
+                        drawCnt++;
+                    cardsToChoose[j] = drawCnt;
+                    printf("%d)%s\n", j + 1, deck[drawCnt].cardName);
+                    drawCnt++;
+                }
+                printf("%s\n", chooseOne[language]);
+                u8 choice = -1;
                 scanf("%hhd", &choice);
+
+                while (choice > cnt || choice < 1)
+                {
+                    setbuf(stdin, NULL);
+                    choice = -1;
+                    INVALID
+                    scanf("%hhd", &choice);
+                }
+                card tmp = deck[cardsToChoose[choice - 1]];
+                memset(&deck[cardsToChoose[choice - 1]], 0, sizeof(card));
+                tmp.place = 2;
+                u32 emptyCard = 0;
+                while (p[0].hand[emptyCard].place == 2)
+                    emptyCard++;
+                p[0].hand[emptyCard] = tmp;
+                p[0].cardCount++;
+                printf("%s %s\n", chosed[language], p[0].hand[emptyCard].cardName);
             }
-            card tmp = deck[cardsToChoose[choice - 1]];
-            memset(&deck[cardsToChoose[choice - 1]], 0, sizeof(card));
-            tmp.place = 2;
-            u32 emptyCard = 0;
-            while (p[0].hand[emptyCard].place == 2)
-                emptyCard++;
-            p[0].hand[emptyCard] = tmp;
-            p[0].cardCount++;
             CLEAN
             shuffle();
-            printf("%s %s\n", chosed[language], p[0].hand[emptyCard].cardName);
         }
         else
         {
-            SLEEP
             string choosed[2] = {"a card.", "了一張卡"};
-            printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, chosedCard[language], choosed[language]);
-            draw(&p[nowPlaying]);
+            SLEEP
+            for (i32 i = 0; i < 1 + p[nowPlaying].extraCard; i++)
+            {
+                printf("%s %d %s%s\n", CPUdraw[language][0], nowPlaying, chosedCard[language], choosed[language]);
+                draw(&p[nowPlaying]);
+            }
         }
         nowPlaying++;
         nowPlaying %= playercnt;
@@ -1093,17 +1129,21 @@ void prospector(player p[], u8 goveror)
 {
     if (goveror == 0)
         printf("%s\n", yourTurn[language]);
-    u8 drawCnt = 0;
-    if (cardLeftInDeck == 0)
+    library(&p[goveror]);
+    for (i32 i = 0; i < 1 * p[goveror].library; i++)
     {
-        drawCnt = 0;
-        recycleCard();
+        u8 drawCnt = 0;
+        if (cardLeftInDeck == 0)
+        {
+            drawCnt = 0;
+            recycleCard();
+        }
+        while (deck[drawCnt].place != 1)
+            drawCnt++;
+        if (goveror == 0)
+            printf("%s%s\n", drew[language], deck[drawCnt].cardName);
+        draw(&p[goveror]);
     }
-    while (deck[drawCnt].place != 1)
-        drawCnt++;
-    if (goveror == 0)
-        printf("%s%s\n", drew[language], deck[drawCnt].cardName);
-    draw(&p[goveror]);
     return;
 }
 
@@ -1159,9 +1199,12 @@ void well(u8 cardowner)
 }
 void aqueduct(player *p) //id 14
 {
-    const string effect[2] = {"Aqueduct\'s effect,you can sell an extra product.", "溝渠效果，你可以多販賣一個貨品"};
-    if (searchBoard(p, 14))
+    const string effect[2] = {"Aqueduct\'s effect,you can produce an extra product.", "溝渠效果，可以多生產一個貨品"};
+    if (searchBoard(p, 14) != 0)
+    {
         p->extraProduce = 1;
+        printf("%s\n", effect[language]);
+    }
     else
         p->extraProduce = 0;
     return;
@@ -1175,9 +1218,10 @@ void marketHall(u8 cardowner)
 void tradingPost(player *p) //id 17
 {
     const string effect[2] = {"Trading Post\'s effect,you can sell an extra product.", "交易所效果，可以多販賣一個貨品"};
-    if (searchBoard(p, 17))
+    if (searchBoard(p, 17) != 0)
     {
         p->extraTrade = 1;
+        printf("%s\n", effect[language]);
     }
     else
         p->extraTrade = 0;
@@ -1186,14 +1230,32 @@ void tradingPost(player *p) //id 17
 void archive(u8 cardowner)
 {
 }
-void perfecture(u8 cardowner)
+void perfecture(player *p) //id 19
 {
+    const string effect[2] = {"Perfecture\'s effect,you can keep an extra product.", "辦公處效果，可以多保留一個貨品"};
+    if (searchBoard(p, 19) != 0)
+    {
+        p->extraCard = 1;
+        printf("%s\n", effect[language]);
+    }
+    else
+        p->extraCard = 0;
+    return;
 }
 void goldMine(u8 cardowner)
 {
 }
-void library(u8 cardowner)
+void library(player *p) //id 21
 {
+    const string effect[2] = {"library\'s effect,you have doubled the privilege.", "圖書館效果，所有特權都是雙倍效果"};
+    if (searchBoard(p, 21) != 0)
+    {
+        p->library = 2;
+        printf("%s\n", effect[language]);
+    }
+    else
+        p->library = 1;
+    return;
 }
 void statue(u8 cardowner)
 {
@@ -1213,7 +1275,7 @@ void guildHall(player *p, u8 *vp) //id = 26
     u8 fac = 0;
     u8 hasGuild = 0;
     for (i32 i = 0; i < p->boardCount; i++)
-        if (p->board[i].id == 26)
+        if (p->board[i].id == 25)
         {
             hasGuild = 1;
             break;
@@ -1238,7 +1300,7 @@ void cityHall(player *p, u8 *vp)
     u8 cnt = 0;
     u8 hasCit = 0;
     for (i32 i = 0; i < p->boardCount; i++)
-        if (p->board[i].id == 27)
+        if (p->board[i].id == 26)
         {
             hasCit = 1;
             break;
@@ -1261,7 +1323,7 @@ void triumhalArch(player *p, u8 *vp)
     u8 triCnt = 0, t1 = 0, t2 = 0, t3 = 0;
     u8 hasTri = 0;
     for (i32 i = 0; i < p->boardCount; i++)
-        if (p->board[i].id == 28)
+        if (p->board[i].id == 27)
         {
             hasTri = 1;
             break;
@@ -1270,15 +1332,15 @@ void triumhalArch(player *p, u8 *vp)
         return;
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        if (p->board[i].id == 23)
+        if (p->board[i].id == 22)
         {
             t1 = 1;
         }
-        if (p->board[i].id == 24)
+        if (p->board[i].id == 23)
         {
             t2 = 1;
         }
-        if (p->board[i].id == 25)
+        if (p->board[i].id == 24)
         {
             t3 = 1;
         }

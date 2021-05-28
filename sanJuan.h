@@ -17,7 +17,7 @@
 #define PRINTDECK                                                 \
     for (i32 i = 0; i < 110; i++)                                 \
     {                                                             \
-        printf("%s %d %d\n", deck[i].cardName, i, deck[i].place); \
+        printf("%s %d %d id:%d\n", deck[i].cardName, i, deck[i].place,deck[i].id); \
     }
 #define DECKSIZE 110
 #define GAMEEND 12
@@ -64,6 +64,7 @@ typedef struct _player
     u8 extraCostdown;
     u8 extraTrade;
     u8 extraCard;
+    u8 library;
 } player;
 
 //general functions
@@ -112,9 +113,9 @@ void marketStand(u8 cardowner);
 void marketHall(u8 cardowner);
 void tradingPost(player *p);
 void archive(u8 cardowner);
-void perfecture(u8 cardowner);
+void perfecture(player *p);
 void goldMine(u8 cardowner);
-void library(u8 cardowner);
+void library(player *p);
 void statue(u8 cardowner);
 void victoryColumn(u8 cardowner);
 void hero(u8 cardowner);
