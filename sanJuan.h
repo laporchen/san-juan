@@ -20,7 +20,7 @@
         printf("%s %d %d id:%d\n", deck[i].cardName, i, deck[i].place,deck[i].id); \
     }
 #define DECKSIZE 110
-#define GAMEEND 12
+#define GAMEEND 6
 #define INVALID printf("%s", invalid[language]);
 #define SLEEP nanosleep((const struct timespec[]){{0, 600000000L}}, NULL);;
 typedef char string[600];
@@ -65,6 +65,8 @@ typedef struct _player
     u8 extraTrade;
     u8 extraCard;
     u8 library;
+    u8 archive;
+    u8 quarry;
 } player;
 
 //general functions
@@ -92,6 +94,7 @@ void roleReset(role r[]);
 void reduceCard(player *p);
 u8 searchCard(player *p, u8 id);
 u8 searchBoard(player *p, u8 id);
+void giveCard(player *p,card c);
 //role functions
 void builder(player p[], u8 goveror);
 void producer(player p[], u8 goveror);
@@ -105,16 +108,16 @@ void smithy(player *p);
 void poorHouse(player *p);
 void blackMarket(u8 cardowner);
 void crane(u8 cardowner);
-void carpenter(u8 cardowner);
-void quarry(u8 cardowner);
-void well(u8 cardowner);
+void carpenter(player *p);
+void quarry(player *p);
+void well(player *p);
 void aqueduct(player *p);
 void marketStand(u8 cardowner);
 void marketHall(u8 cardowner);
 void tradingPost(player *p);
-void archive(u8 cardowner);
+void archive(player *p);
 void perfecture(player *p);
-void goldMine(u8 cardowner);
+void goldMine(player *p);
 void library(player *p);
 void statue(u8 cardowner);
 void victoryColumn(u8 cardowner);
