@@ -40,6 +40,7 @@ typedef struct _card
     u8 vp;
     u8 hasProduct;
     u8 extraValue;
+    u8 chapelScore;
 } card;
 
 typedef struct _role
@@ -106,14 +107,14 @@ void tower(player *p);
 void chapel(player *p);
 void smithy(player *p);
 void poorHouse(player *p);
-void blackMarket(u8 cardowner);
+void blackMarket(player *p,u8 *cost);
 void crane(u8 cardowner);
 void carpenter(player *p);
 void quarry(player *p);
 void well(player *p);
 void aqueduct(player *p);
-void marketStand(u8 cardowner);
-void marketHall(u8 cardowner);
+void marketStand(player *p,u8 sellCount);
+void marketHall(player *p);
 void tradingPost(player *p);
 void archive(player *p);
 void perfecture(player *p);

@@ -248,6 +248,7 @@ void mainGame()
         {
             tower(&players[nowPlaying]);
         }
+        chapel(&players[0]);
         for (i32 c = 0; c < playercnt; c++) //reduce cards
             reduceCard(&players[c]);
 
@@ -508,9 +509,16 @@ void printPlayerCard(player *p)
 void printPlayerBoard(player *p)
 {
     const string hasProduct[2][2] = {{"", "(has product)"}, {"", "(有貨品)"}};
+    const string extraScore[2] = {"Extra's Score :","額外分數:"};
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        printf("%d)%s %s\n", i + 1, p->board[i].cardName, hasProduct[language][p->board[i].hasProduct]);
+        
+        printf("%d)%s %s ", i + 1, p->board[i].cardName, hasProduct[language][p->board[i].hasProduct]);
+        if (p->board[i].chapelScore != 0 )
+            {
+                printf("%s %d",extraScore[language],p->board[i].chapelScore);
+            }
+        printf("\n");
     }
     return;
 }
@@ -989,6 +997,7 @@ void producer(player p[], u8 goveror)
 }
 void trader(player p[], u8 goveror)
 {
+
     u8 nowPlaying = goveror;
     u8 priceTag = rand() % 5;
     const string tradeCount[2][2] = {{"You can sell", "products."}, {"你可以販賣", "個貨品"}};
@@ -1006,13 +1015,15 @@ void trader(player p[], u8 goveror)
     {
         if (nowPlaying == 0)
             printf("%s\n", yourTurn[language]);
+
         tradingPost(&p[nowPlaying]);
         library(&p[nowPlaying]);
+
         u8 extra = 0 + p[nowPlaying].extraTrade;
         if (nowPlaying == goveror)
-        {
             extra += 1 * p[nowPlaying].library;
-        }
+
+        u8 sellCount = 0;
         if (nowPlaying == 0)
         {
 
@@ -1048,6 +1059,7 @@ void trader(player p[], u8 goveror)
                 }
                 else
                 {
+                    sellCount++;
                     sell(&p[nowPlaying], choice - 1, priceList[priceTag][p[nowPlaying].board[choice - 1].cost - 1]);
                     printf("%s%s %s\n", you[language], sold[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
                 }
@@ -1067,6 +1079,7 @@ void trader(player p[], u8 goveror)
                         sell(&p[nowPlaying], i, priceList[priceTag][p[nowPlaying].board[i].cost - 1]);
                         printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, sold[language], productName[language][p[nowPlaying].board[i].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
                         isProduce = 1;
+                        sellCount++;
                         break;
                     }
                 }
@@ -1078,6 +1091,7 @@ void trader(player p[], u8 goveror)
                 }
             }
         }
+        marketHall(&p[nowPlaying]);
         nowPlaying++;
         nowPlaying %= playercnt;
     }
@@ -1212,6 +1226,38 @@ void tower(player *p) //id 5
 }
 void chapel(player *p) //id 6
 {
+    const string effect[2] = {"Chapel's effect,you can put a card under chapel.\nDo you want to use chapel's effect?\n1)Yes\n2)No\n",
+                              "禮拜堂效果，你可以放一張牌到禮拜堂底下\n是否使用禮拜堂效果?\n1)使用\n2)不使用\n"};
+    for (i32 i = 0; i < p->boardCount; i++)
+    {
+        if (p->board[i].id == 6)
+        {
+            printf("%s", effect[language]);
+            u8 use = -1;
+            scanf("%hhd", &use);
+            while (use != 1 && use != 2)
+            {
+                INVALID
+                use = -1;
+                scanf("%hhd", &use);
+            }
+            if (use != 1)
+                continue;
+            
+            const string chapelChoose[2] = {"Choose one to put under chapel", "選擇一張放到禮拜堂底下"};
+            printPlayerBoard(p);
+            u8 choice = -1;
+            scanf("%hhd", &choice);
+            while(choice <1 || choice >p->cardCount)
+            {
+                INVALID
+                choice = -1;
+                scanf("%hhd", &choice);
+            }
+            discardCard(p,choice-1);
+            p->board[i].chapelScore++;
+        }
+    }
 }
 void smithy(player *p) //id 7
 {
@@ -1236,8 +1282,14 @@ void poorHouse(player *p) //id 8
 
     return;
 }
-void blackMarket(u8 cardowner)
+void blackMarket(player *p, u8 *cost) //id 9
 {
+    const string effect[2] = {"Black Market\'s effect,you pay building with up to 2 products.", "黑市效果，可以用最多兩個貨品來支付建築"};
+    const string useEffect[2] = {"Do you want to use Black Market\'s Effect?\n1)Yes\n2)No\n", "是否使用黑市效果\n1)使用\n2)不使用\n"};
+    const string cantSell[2] = {"This building has no product.", "此建築物沒有貨品"};
+    if (searchBoard(p, 9) != 0)
+    {
+    }
 }
 void crane(u8 cardowner)
 {
@@ -1283,11 +1335,23 @@ void aqueduct(player *p) //id 14
         p->extraProduce = 0;
     return;
 }
-void marketStand(u8 cardowner)
+void marketStand(player *p, u8 sellCount)
 {
+    const string effect[2] = {"Market Stand\'s effect,you can draw a card.", "攤販效果，可以抽一張牌"};
+    if (searchBoard(p, 16) != 0 && sellCount >= 2)
+    {
+        printf("%s\n", effect[language]);
+        draw(p);
+    }
 }
-void marketHall(u8 cardowner)
+void marketHall(player *p) //id 16
 {
+    const string effect[2] = {"Market Hall\'s effect,you can draw a card.", "市場效果，可以抽一張牌"};
+    if (searchBoard(p, 16) != 0)
+    {
+        printf("%s\n", effect[language]);
+        draw(p);
+    }
 }
 void tradingPost(player *p) //id 17
 {
