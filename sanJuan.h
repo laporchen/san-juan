@@ -20,7 +20,6 @@
         printf("%s %d %d id:%d\n", deck[i].cardName, i, deck[i].place,deck[i].id); \
     }
 #define DECKSIZE 110
-#define GAMEEND 6
 #define INVALID printf("%s", invalid[language]);
 #define SLEEP nanosleep((const struct timespec[]){{0, 600000000L}}, NULL);;
 typedef char string[600];
@@ -62,12 +61,13 @@ typedef struct _player
     u8 playerOrder;
     u8 councilorExtraDraw;
     u8 extraProduce;
-    u8 extraCostdown;
     u8 extraTrade;
     u8 extraCard;
     u8 library;
     u8 archive;
     u8 quarry;
+    u8 smithy;
+    u8 productsCount;
 } player;
 
 //general functions

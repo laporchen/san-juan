@@ -51,7 +51,7 @@ const string cardNameData[2][30] = {{"\033[0;35mIndigo plant\033[0m", "\033[0;33
                                      "黑市", "起重機", "木工場", "採石場", "水井", "溝渠", "攤販", "市場", "交易所", "檔案館", "辦公處", "金礦坑", "圖書館",
                                      "雕鑄像紀念碑", "勝利柱紀念碑", "英雄像紀念碑", "同業會館", "市政廳", "凱旋門", "宮殿"}};
 //textLanguage-----------------------------------------------------------------
-const string startMenuText[2] = {"\tSAN JUAN\n\n1)Start Game\n2)About Project\n3)Language Setting\n4)Quit\nPlease choose a option.\n", "\t聖胡安\n\n1)開始遊戲\n2)關於\n3)語言選擇\n4)離開\n請選擇。\n"};
+const string startMenuText[2] = {"\tSAN JUAN\n\n1)Start Game\n2)About Project\n3)Setting\n4)Quit\nPlease choose a option.\n", "\t聖胡安\n\n1)開始遊戲\n2)關於\n3)設定\n4)離開\n請選擇。\n"};
 const string invalid[2] = {"Invalid option,please try another one.\n", "無效的選項，請再試一次。\n"};
 const string bye[2] = {"See Ya\n", "88\n"};
 
@@ -59,6 +59,8 @@ const string bye[2] = {"See Ya\n", "88\n"};
 u8 language = 1;
 u8 playercnt = -1;
 u8 cardLeftInDeck = 110;
+u8 GAMEEND = 12;
+u8 cpuLevel = 1;
 void (*menuFunc[3])() = {mainGame, about, setting};
 void (*roleFunc[5])(player p[], u8 governor) = {builder, producer, trader, councilor, prospector};
 
@@ -221,7 +223,8 @@ void init(u8 playercount)
 }
 void mainGame()
 {
-    string gamestart[2] = {"How many CPU is playing (1-3)?\n", "要幾個電腦玩家(1-3)?\n"};
+    const string gamestart[2] = {"How many CPU is playing (1-3)?\n", "要幾個電腦玩家(1-3)?\n"};
+    const string newRound[2] = {"A new round has started.", "新的回合開始了"};
     printf("%s", gamestart[language]);
     scanf("%hhd", &playercnt);
     while ((playercnt > 3 || playercnt < 1))
@@ -240,6 +243,7 @@ void mainGame()
     u8 nowPlaying = rand() % playercnt;
     while (gameProgressing)
     {
+        printf("%s\n", newRound[language]);
         recycleCard();
         //PRINTDECK
         roleReset(roles); //reset role
@@ -248,7 +252,8 @@ void mainGame()
         {
             tower(&players[nowPlaying]);
         }
-        chapel(&players[0]);
+        for (i32 i = 0; i < playercnt; i++)
+            chapel(&players[(nowPlaying + i) % playercnt]);
         for (i32 c = 0; c < playercnt; c++) //reduce cards
             reduceCard(&players[c]);
 
@@ -272,6 +277,8 @@ void mainGame()
                     break;
                 }
         }
+        nowPlaying++;
+        nowPlaying %= playercnt;
     }
     GameEnd();
     return;
@@ -325,18 +332,71 @@ void about()
 }
 void setting()
 {
+    string choooseSetting[2] = {"1)Game setting\n2)Language\n", "1)遊戲選項\n2)語言選項\n"};
     string settingStr[2] = {"\tChoose a language\n\n1)English\n2)中文\n", "\t選擇語言\n\n1)English\n2)中文\n"};
-    printf("%s", settingStr[language]);
-    int la = -1;
-    scanf("%d", &la);
-    while ((la > 2 || la < 1))
+    printf("%s", choooseSetting[language]);
+    u8 choice = -1;
+    scanf("%hhd", &choice);
+    while ((choice > 2 || choice < 1))
     {
+        INVALID
         setbuf(stdin, NULL);
-
-        scanf("%d", &la);
+        scanf("%hhd", &choice);
     }
-    language = la - 1;
     CLEAN
+    if (choice == 1)
+    {
+        string gameSetting[2] = {"1)CPU level\n2)Ending requirement\n", "1)CPU 難度\n2)結束條件\n"};
+        printf("%s", gameSetting[language]);
+        scanf("%hhd", &choice);
+        while ((choice > 2 || choice < 1))
+        {
+            INVALID
+            setbuf(stdin, NULL);
+            scanf("%hhd", &choice);
+        }
+        CLEAN
+        if (choice == 1)
+        {
+            string levelSetting[2] = {"CPU level (1,2)\nCurrent setting : ", "CPU等級 (1,2)\n目前設定 : "};
+            printf("%s %d\n", levelSetting[language], cpuLevel);
+            scanf("%hhd", &choice);
+            while ((choice > 2 || choice < 1))
+            {
+                INVALID
+                setbuf(stdin, NULL);
+                scanf("%hhd", &choice);
+            }
+            cpuLevel = choice;
+        }
+        else
+        {
+            string ending[2] = {"How many built cards are required to end the game (6-12)\nCurrent setting : ", "需要建造幾張卡來結束遊戲 (6-12)\n目前設定 : "};
+            printf("%s %d\n", ending[language], GAMEEND);
+            scanf("%hhd", &choice);
+            while ((choice > 12 || choice < 6))
+            {
+                INVALID
+                setbuf(stdin, NULL);
+                scanf("%hhd", &choice);
+            }
+            GAMEEND = choice;
+        }
+    }
+    else if (choice == 2)
+    {
+        printf("%s", settingStr[language]);
+        int la = -1;
+        scanf("%d", &la);
+        while ((la > 2 || la < 1))
+        {
+            INVALID
+            setbuf(stdin, NULL);
+            scanf("%d", &la);
+        }
+        language = la - 1;
+        CLEAN
+    }
     return;
 }
 void printPlayerStatus(player *p)
@@ -509,15 +569,15 @@ void printPlayerCard(player *p)
 void printPlayerBoard(player *p)
 {
     const string hasProduct[2][2] = {{"", "(has product)"}, {"", "(有貨品)"}};
-    const string extraScore[2] = {"Extra's Score :","額外分數:"};
+    const string extraScore[2] = {"Extra's Score :", "額外分數:"};
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        
+
         printf("%d)%s %s ", i + 1, p->board[i].cardName, hasProduct[language][p->board[i].hasProduct]);
-        if (p->board[i].chapelScore != 0 )
-            {
-                printf("%s %d",extraScore[language],p->board[i].chapelScore);
-            }
+        if (p->board[i].chapelScore != 0)
+        {
+            printf("%s %d", extraScore[language], p->board[i].chapelScore);
+        }
         printf("\n");
     }
     return;
@@ -768,9 +828,10 @@ void builder(player p[], u8 goveror)
         smithy(&p[nowPlaying]);
         quarry(&p[nowPlaying]);
         library(&p[nowPlaying]);
-        u8 costdown = 0 + p[nowPlaying].extraCostdown;
+        u8 costdown = 0;
         if (nowPlaying == goveror)
             costdown += 1 * p[nowPlaying].library;
+
         if (nowPlaying == 0)
         {
             printPlayerCard(&p[nowPlaying]);
@@ -779,9 +840,14 @@ void builder(player p[], u8 goveror)
             printf("%s", whatToBuild[language]);
             scanf("%hhd", &choice);
             u8 originalCostdown = costdown;
-            if (choice >= 1 && choice <= p[nowPlaying].cardCount)
+            if (p[nowPlaying].quarry && choice >= 1 && choice <= p[nowPlaying].cardCount)
                 if (p[nowPlaying].hand[choice - 1].id > 4)
                     costdown++;
+
+            if (p[nowPlaying].smithy && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                if (p[nowPlaying].hand[choice - 1].id <= 4)
+                    costdown++;
+
             while ((p[nowPlaying].cardCount != 0) && (choice > p[nowPlaying].cardCount + 1 || choice < 1 || !(p[nowPlaying].cardCount > (p[nowPlaying].hand[choice - 1].cost - costdown))))
             {
                 if (choice > p[nowPlaying].cardCount + 1 || choice < 1)
@@ -792,8 +858,11 @@ void builder(player p[], u8 goveror)
                 choice = -1;
                 costdown = originalCostdown;
                 scanf("%hhd", &choice);
-                if (choice >= 1 && choice <= p[nowPlaying].cardCount)
+                if (p[nowPlaying].quarry && choice >= 1 && choice <= p[nowPlaying].cardCount)
                     if (p[nowPlaying].hand[choice - 1].id > 4)
+                        costdown++;
+                if (p[nowPlaying].smithy && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                    if (p[nowPlaying].hand[choice - 1].id <= 4)
                         costdown++;
             }
             if (p[nowPlaying].cardCount == 0)
@@ -832,7 +901,7 @@ void builder(player p[], u8 goveror)
                     CLEAN
                 }
                 p[nowPlaying].boardCount++;
-                printf("%s %s\n", built[language], p[nowPlaying].board[emptySlot].cardName);
+                printf("%s %s\n\n", built[language], p[nowPlaying].board[emptySlot].cardName);
                 if (p[nowPlaying].board[emptySlot].id > 4)
                     carpenter(&p[nowPlaying]);
             }
@@ -863,7 +932,7 @@ void builder(player p[], u8 goveror)
                 while (p[nowPlaying].board[emptySlot].place != 0)
                     emptySlot++;
                 p[nowPlaying].board[emptySlot] = p[nowPlaying].hand[played];
-                printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, built[language], p[nowPlaying].board[emptySlot].cardName);
+                printf("%s %d %s %s\n\n", CPUdraw[language][0], nowPlaying, built[language], p[nowPlaying].board[emptySlot].cardName);
                 i8 cardCost = p[nowPlaying].board[emptySlot].cost - costdown;
                 if (cardCost < 1)
                     cardCost = 1;
@@ -934,7 +1003,7 @@ void producer(player p[], u8 goveror)
                 if (choice >= maxChoice)
                 {
                     const string noProduce[2] = {"You produced nothing.", "你沒有生產"};
-                    printf("%s\n", noProduce[language]);
+                    printf("%s\n\n", noProduce[language]);
                 }
                 else
                 {
@@ -951,12 +1020,12 @@ void producer(player p[], u8 goveror)
                     if (choice == maxChoice)
                     {
                         const string noProduce[2] = {"You produced nothing.", "你沒有生產"};
-                        printf("%s\n", noProduce[language]);
+                        printf("%s\n\n", noProduce[language]);
                     }
                     else
                     {
                         CLEAN
-                        printf("%s %s\n", produced[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
+                        printf("%s %s\n\n", produced[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
                         produce(&p[nowPlaying], choice - 1);
                         produceWellCount++;
                     }
@@ -1055,13 +1124,13 @@ void trader(player p[], u8 goveror)
                 if (choice == maxChoice)
                 {
                     const string noProduce[2] = {"You sold nothing.", "你沒有販賣貨品"};
-                    printf("%s\n", noProduce[language]);
+                    printf("%s\n\n", noProduce[language]);
                 }
                 else
                 {
                     sellCount++;
                     sell(&p[nowPlaying], choice - 1, priceList[priceTag][p[nowPlaying].board[choice - 1].cost - 1]);
-                    printf("%s%s %s\n", you[language], sold[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
+                    printf("%s%s %s\n\n", you[language], sold[language], productName[language][p[nowPlaying].board[choice - 1].cost - 1]);
                 }
             }
         }
@@ -1077,7 +1146,7 @@ void trader(player p[], u8 goveror)
                     {
 
                         sell(&p[nowPlaying], i, priceList[priceTag][p[nowPlaying].board[i].cost - 1]);
-                        printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, sold[language], productName[language][p[nowPlaying].board[i].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
+                        printf("%s %d %s %s\n\n", CPUdraw[language][0], nowPlaying, sold[language], productName[language][p[nowPlaying].board[i].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
                         isProduce = 1;
                         sellCount++;
                         break;
@@ -1086,7 +1155,7 @@ void trader(player p[], u8 goveror)
                 if (!isProduce)
                 {
                     const string noProduce[2] = {"sold nothing.", "沒有販賣貨品"};
-                    printf("%s %d %s\n", CPUdraw[language][0], nowPlaying, noProduce[language]);
+                    printf("%s %d %s\n\n", CPUdraw[language][0], nowPlaying, noProduce[language]);
                     break;
                 }
             }
@@ -1226,13 +1295,15 @@ void tower(player *p) //id 5
 }
 void chapel(player *p) //id 6
 {
-    const string effect[2] = {"Chapel's effect,you can put a card under chapel.\nDo you want to use chapel's effect?\n1)Yes\n2)No\n",
-                              "禮拜堂效果，你可以放一張牌到禮拜堂底下\n是否使用禮拜堂效果?\n1)使用\n2)不使用\n"};
+    const string effect[2] = {"Chapel's effect,you can put a card under chapel.\nDo you want to use chapel's effect?\n1)Yes\n2)No",
+                              "禮拜堂效果，你可以放一張牌到禮拜堂底下\n是否使用禮拜堂效果?\n1)使用\n2)不使用"};
+    const string chapelChoose[2] = {"Choose one to put under chapel", "選擇一張放到禮拜堂底下"};
+    const string cpuChapel[2] = {"put a card under chapel", "將一張牌放在禮拜堂底下"};
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        if (p->board[i].id == 6)
+        if (p->playerOrder == 0 && p->board[i].id == 6)
         {
-            printf("%s", effect[language]);
+            printf("%s\n", effect[language]);
             u8 use = -1;
             scanf("%hhd", &use);
             while (use != 1 && use != 2)
@@ -1243,19 +1314,32 @@ void chapel(player *p) //id 6
             }
             if (use != 1)
                 continue;
-            
-            const string chapelChoose[2] = {"Choose one to put under chapel", "選擇一張放到禮拜堂底下"};
-            printPlayerBoard(p);
+
+            printPlayerCard(p);
             u8 choice = -1;
             scanf("%hhd", &choice);
-            while(choice <1 || choice >p->cardCount)
+            while (choice < 1 || choice > p->cardCount)
             {
                 INVALID
                 choice = -1;
                 scanf("%hhd", &choice);
             }
-            discardCard(p,choice-1);
+            discardCard(p, choice - 1);
             p->board[i].chapelScore++;
+        }
+        else if (p->playerOrder != 0 && p->board[i].id == 6)
+        {
+
+            for (i32 i = 0; i < p->cardCount; i++)
+            {
+                if (p->hand[i].cost < 3 && p->hand[i].vp < 3)
+                {
+                    printf("CPU %d %s\n", p->playerOrder, cpuChapel[language]);
+                    discardCard(p, i);
+                    p->board[i].chapelScore++;
+                    break;
+                }
+            }
         }
     }
 }
@@ -1264,11 +1348,11 @@ void smithy(player *p) //id 7
     const string smithEffect[2] = {"Smithy\'s effect,you can pay 1 less while building.", "鐵匠鋪效果，可以少支付一個費用"};
     if (searchBoard(p, 7))
     {
-        p->extraCostdown = 1;
+        p->smithy = 1;
         printf("%s\n", smithEffect[language]);
     }
     else
-        p->extraCostdown = 0;
+        p->smithy = 0;
     return;
 }
 void poorHouse(player *p) //id 8
