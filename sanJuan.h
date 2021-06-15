@@ -1,20 +1,6 @@
 #pragma once
 #include "struct.h"
-#include "stdio.h"
-#include "stdint.h"
-#include "string.h"
-#include "stdlib.h"
-#include "time.h"
-#include <unistd.h>
-#define i8 int8_t
-#define u8 uint8_t
-#define i16 int16_t
-#define u16 uint16_t
-#define i32 int32_t
-#define u32 uint32_t
-#define i64 int64_t
-#define u64 uint64_t
-#define CLEAN printf("\e[1;1H\e[2J");
+
 #define PRINTDECK                                                                   \
     for (i32 i = 0; i < 110; i++)                                                   \
     {                                                                               \
@@ -67,7 +53,7 @@ void tower(player *p);
 void chapel(player *p);
 void smithy(player *p);
 void poorHouse(player *p);
-void blackMarket(player *p, u8 *cost);
+void blackMarket(player *p);
 void crane(player *p);
 void carpenter(player *p);
 void quarry(player *p);

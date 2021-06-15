@@ -3,7 +3,8 @@
 #include "stdint.h"
 #include "string.h"
 #include "stdlib.h"
-
+#include "time.h"
+#include <unistd.h>
 #define i8 int8_t
 #define u8 uint8_t
 #define i16 int16_t
@@ -13,6 +14,7 @@
 #define i64 int64_t
 #define u64 uint64_t
 #define CLEAN printf("\e[1;1H\e[2J");
+#define MIN(a,b) (((a)<(b))?(a):(b))
 typedef char string[600];
 typedef struct _card
 {
@@ -27,7 +29,6 @@ typedef struct _card
     u8 vp;
     u8 hasProduct;
     u8 extraValue;
-    u8 chapelScore;
 } card;
 typedef struct _role
 {
@@ -55,6 +56,7 @@ typedef struct _player
     u8 smithy;
     u8 productsCount;
     u8 crane;
+    u8 blackMarket;
 } player;
 
 typedef struct _savefile 
