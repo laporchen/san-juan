@@ -42,6 +42,7 @@ void reduceCard(player *p);
 u8 searchCard(player *p, u8 id);
 u8 searchBoard(player *p, u8 id);
 void giveCard(player *p, card c);
+void openEditor();
 //role functions
 void builder(player p[], u8 goveror);
 void producer(player p[], u8 goveror);

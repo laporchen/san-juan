@@ -1,5 +1,6 @@
 #include "sanJuan.h"
 #include "saving.h"
+#include "text.h"
 const u8 cardCounts[] = {10, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2};
 const u8 vp[] = {1, 1, 2, 2, 3, 2, 2, 1, 1, 1, 1, 2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 3, 3, 4, 5, 0, 0, 0, 0};
 const u8 type[] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2};
@@ -22,40 +23,7 @@ phase:
 8:no phase
 9:game end
 */
-//card-------------------------------------------------------------------------
-const string productName[2][5] = {{"\033[0;35mIndigo\033[0m", "\033[0;33mSugar\033[0m", "\033[0;32mTabacco\033[0m", "\033[0;34mCoffee\033[0m", "\033[0;36mSilver\033[0m"},
-                                  {"\033[0;35m染料\033[0m", "\033[0;33m糖\033[0m", "\033[0;32m菸草\033[0m", "\033[0;34m咖啡\033[0m", "\033[0;36m白銀\033[0m"}};
-const string CPUdraw[2][2] = {{"CPU ", " drawed.\n"}, {"CPU ", " 抽了卡\n"}};
-const string chooseOne[2] = {"Choose one to keep", "選擇一張留下"};
-const string chosedCard[2] = {"Chosed ", "選擇"};
-const string chosed[2] = {"You chosed", "你選擇了"};
-const string drew[2] = {"You drew ", "你抽到了 "};
-const string whatToBuild[2] = {"Choose a building to build.\n", "選擇一個建築來建造\n"};
-const string built[2] = {"built", "建造"};
-const string nobuild[2] = {"chosed to not build anything\n", "決定不蓋建築\n"};
-const string costText[2] = {"Cost", "費用"};
-const string notEnoughCard[2] = {"You don't have enough cost.\n", "手牌不足以負擔費用\n"};
-const string whatToPay[2] = {"Choose a card to pay the building.", "選擇1張牌來支付建築"};
-const string pass[2] = {"You pass.\n", "你選擇跳過\n"};
-const string passChoice[2] = {"Pass", "跳過"};
-const string produceText[2] = {"produce", "生產"};
-const string yourTurn[2] = {"It's your turn.", "輪到你了"};
-//card-------------------------------------------------------------------------
-const string cardNameData[2][30] = {{"\033[0;35mIndigo plant\033[0m", "\033[0;33mSugar Mill\033[0m", "\033[0;32mTobacco storage\033[0m",
-                                     "\033[0;34mCoffee Roaster\033[0m", "\033[0;36mSilver smelter\033[0m",
-                                     "Tower", "Chapel", "Smithy", "Poor House", "Black Market", "Crane", "Carpenter",
-                                     "Quarry", "Well", "Aqueduct", "market Stand", "Market Hall", "Trading Post", "Archive",
-                                     "Perfecture", "Gold mine", "Library", "Statue", "Victory Column", "Hero", "Guild Hall", "City Hall",
-                                     "Triumhal Arch", "Palace"},
-                                    {"\033[0;35m染料廠\033[0m", "\033[0;33m蔗糖廠\033[0m", "\033[0;32m菸草廠\033[0m", "\033[0;34m咖啡廠\033[0m", "\033[0;36m白銀廠\033[0m", "塔樓", "禮拜堂", "鐵匠鋪", "救濟院",
-                                     "黑市", "起重機", "木工場", "採石場", "水井", "溝渠", "攤販", "市場", "交易所", "檔案館", "辦公處", "金礦坑", "圖書館",
-                                     "雕鑄像紀念碑", "勝利柱紀念碑", "英雄像紀念碑", "同業會館", "市政廳", "凱旋門", "宮殿"}};
-//textLanguage-----------------------------------------------------------------
-const string startMenuText[2] = {"\tSAN JUAN\n\n1)New Game\n2)Load Game\n3)About Project\n4)Setting\n5)Quit\nPlease choose a option.\n", "\t聖胡安\n\n1)新遊戲\n2)讀取遊戲\n3)關於\n4)設定\n5)離開\n請選擇。\n"};
-const string invalid[2] = {"Invalid option,please try another one.\n", "無效的選項，請再試一次。\n"};
-const string bye[2] = {"See Ya\n", "88\n"};
 
-//textLanguage-----------------------------------------------------------------
 u8 language = 1;
 u8 playercnt = -1;
 u8 cardLeftInDeck = DECKSIZE;
@@ -64,7 +32,7 @@ u8 cpuLevel = 1;
 u8 gameIsLoaded = 0;
 u8 loadedOrder = -1;
 u8 gameProgressing = 1;
-void (*menuFunc[4])() = {mainGame, loadGame, about, setting};
+void (*menuFunc[5])() = {mainGame, loadGame, about, setting,openEditor};
 void (*roleFunc[5])(player p[], u8 governor) = {builder, producer, trader, councilor, prospector};
 
 role roles[5] = {0};
@@ -81,7 +49,7 @@ void menu()
         printf("%s", startMenuText[language]);
         int option = -1;
         scanf("%d", &option);
-        while ((option > 5 || option < 1))
+        while ((option > 6 || option < 1))
         {
             setbuf(stdin, NULL);
             option = -1;
@@ -90,7 +58,7 @@ void menu()
         }
         CLEAN
         setbuf(stdin, NULL);
-        if (option == 5)
+        if (option == 6)
         {
             printf("%s", bye[language]);
             break;
@@ -104,75 +72,7 @@ void menu()
 }
 void init(u8 playercount)
 {
-    const string roleName[2][5] = {{"Builder", "Producer", "Trader", "Councilor", "Prosoector"}, {"建築師", "生產者", "商人", "市長", "淘金者"}};
-    const string roleDescription[2][5] = {{"Action\nStart from governor's left,clock wise.Player can choose to build a building and pay the card cost\n\nPrivilege\nGovernor can pay 1 less of the cost. The final cost can't lower than 1 cost.\n",
-                                           "Action\nStart from governor's left,clock wise.Player can choose produce 1 product.\n\nPrivilege\nGovernor can product an extra product.\n",
-                                           "Action\nStart from governor's left,clock wise.Player can sell 1 product.\n\nPrivilege\nGovernor can sell an extra product.\n\nFlip 1 price list.\nThe product's value depents on the list.\n",
-                                           "Action\nStart from governor's left,clock wise.Player can draw 2 cards and keep one.\n\nPrivilege\nGovernor can draw 5 cards and keep one\n",
-                                           "Action\nNone.\n\nPrivilege\nGovernor can draw 1 card.\n"},
-                                          {"行動\n從總督左邊開始，順時鐘方向，玩家選擇1張欲建造的建築卡，並支付卡片費用。\n\n特權\n總督在建造時，可以少支付1個費用，但最後的費用不能少於1。\n",
-                                           "行動\n從總督左邊開始，順時鐘方向，玩家可以生產1個貨品。\n\n特權\n總督可以多生產1個貨品。\n",
-                                           "行動\n從總督左邊開始，順時鐘方向，玩家可以販賣1個貨品。\n\n特權\n總督可以多販賣1個貨品。\n\n翻開1張價目表，貨品價格依照價目表決定。\n",
-                                           "行動\n從總督左邊開始，順時鐘方向，玩家抽2張牌選擇1張留著。\n\n特權\n總督可以抽5張牌並選擇1張留著。\n",
-                                           "行動\n無。\n\n特權\n總督可以抽1張牌。\n"}};
-    const string cardDescription[2][30] = {{"\nproducer phase\nowner produces 1 indigo\n",
-                                            "\nproducer phase\nowner produces 1 sugar\n",
-                                            "\nproducer phase\nowner produces 1 tobacco\n",
-                                            "\nproducer phase\nowner produces 1 coffee\n",
-                                            "\nproducer phase\nowner produces 1 silver\n",
-                                            "\nbeginning of a round\nwhen the governor checks players’ hands for the card limit of 7,\na player with a towerhasa hand limit of 12 instead of 7.\nOf course, if the owner of a tower has more than 12 cards at the\nbeginning of a round,he must discard all cards over 12 to the discard stack.\n",
-                                            "\nbeginning of a round\nbefore the governor checks the players’ card limits(of 7 or 12),\nthe owner of a chapel may place any one of his hand cards\nface down under the chapel. At game end, the player scores 1 victory point for each card under his chapel.\n",
-                                            "\nbuilder phase\nWhen the owner of a smithy builds a production building, he may pay one\ncard less to build it. When a player builds a violet building,\nhe gets no advantage from a smithy.\n",
-                                            "\nbuilder phase\nAfter the owner of a poor house has built a building, he may draw 1 card\nfrom the card supply, adding it to his hand, if he has only 0\nor 1 card in his hand.\n",
-                                            "\nbuilder phase\nWhen the owner of a black market builds any building,he may use up to 2 of\nhis goods(from his production buildings) instead of cards from\nhis hand, placing them face down on the discard stack just\nlike cards from his hand.\n",
-                                            "\nbuilder phase\nThe owner of a crane may overbuild any of his existing buildings, placing the\nnew building card completely covering the old card. By doing\nso, he reduces the cost of the new building by the cost of\nthe old building.\n",
-                                            "\nbuilder phase\nAfter the owner of a carpenter builds a violet building and paysthe buildingcost,\nhe may draw 1 card from the cardsupply and add it to his hand.\nThe carpenter has no special function when the player\nbuilds a production building.\n",
-                                            "\nbuilder phase\nWhen the owner of a quarry builds a violet building, he pays 1 card less to build\nthe building.The quarry has no special function when the player\nbuilds a production building.\n",
-                                            "\nproducer phase\nIn the producer phase, if the owner of a well produces at least 2 goods, he draws an additional card from\nthe cardsupply, adding it to hishand. It matters not whether he\nis the producer or not.\n",
-                                            "\nproducer phase\nIn the producer phase, the owner of an aquaduct may produce 1 more good than otherwise possible\n",
-                                            "\ntrader phase\nDuring the trader phase, if the owner of a market stand sells at least 2 goods,\nhe draws an additional card from the cardsupply, adding it to his hand.\nIt matters not whether he is the trader or not.\n",
-                                            "\ntrader phase\nWhen the owner of a market hall sells at least one good,he draws 1 card more than\nthe price of the good sold from the card supply. If he sells more than 1 good,\nhe only draws one extra card, not 1 extra\ncard for each good sold.\n",
-                                            "\ntrader phase\nDuring the trader phase, the owner of a trading post may sell 1 additional good from\nhis production buildings.\n",
-                                            "\ncouncillor phase\nWhen any player selects the councillor role, the owner of an archive adds all cards\nhe draws to his hand and then chooses which cards to discard from his entire hand.\nIn other words,the player may discard drawn cards or cards he\nalready had in his hand instead of just drawn cards.\n",
-                                            "\ncouncillor phase\nIn the councillor phase, the owner of a prefecture may keep 2 cards instead of 1\n",
-                                            "\nprospector phase\nAfter a player selects the prospector role and takes the privilege (or not),\neach player who owns a gold mine, in clockwise order,may turn over\nthe top-most 4 cards from the card supply, placing them face up on the table:\n• if all four cards have different building costs,\nthe player adds any one of the cards to his hand and discards the other 3 cards face down on the discard stack.\n• if at least 2 of the cards have the same building cost, the player gets no card\nand discards all 4 cards face down onthe discard stack.\n",
-                                            "\nall phases\nThe owner of a library may double the privilege of the role he selects.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\ngame end\nAt game end, the owner of a guild hall scores 2 victory points for each production building\nin his play area.\n",
-                                            "\ngame end\nAt game end, the owner of a city hall scores 1 victory point for each violet building\nin his play area.\n",
-                                            "\ngame end\nAt game end, the owner of a triumphal arch scores victory points(VP) for the monuments\nin hisplay area: for 1 monument he scores 4 VP, for 2 monument she scores 6 VP,\nand for 3 monuments he scores 8 VP.\n",
-                                            "\ngame end\nAt game end, the owner of a palace scores an extra 1/4 of his victory points\n"},
-                                           {"\nproducer phase\nowner produces 1 indigo\n",
-                                            "\nproducer phase\nowner produces 1 sugar\n",
-                                            "\nproducer phase\nowner produces 1 tobacco\n",
-                                            "\nproducer phase\nowner produces 1 coffee\n",
-                                            "\nproducer phase\nowner produces 1 silver\n",
-                                            "\nbeginning of a round\nwhen the governor checks players’ hands for the card limit of 7,\na player with a towerhasa hand limit of 12 instead of 7.\nOf course, if the owner of a tower has more than 12 cards at the\nbeginning of a round,he must discard all cards over 12 to the discard stack.\n",
-                                            "\nbeginning of a round\nbefore the governor checks the players’ card limits(of 7 or 12),\nthe owner of a chapel may place any one of his hand cards\nface down under the chapel. At game end, the player scores 1 victory point for each card under his chapel.\n",
-                                            "\nbuilder phase\nWhen the owner of a smithy builds a production building, he may pay one\ncard less to build it. When a player builds a violet building,\nhe gets no advantage from a smithy.\n",
-                                            "\nbuilder phase\nAfter the owner of a poor house has built a building, he may draw 1 card\nfrom the card supply, adding it to his hand, if he has only 0\nor 1 card in his hand.\n",
-                                            "\nbuilder phase\nWhen the owner of a black market builds any building,he may use up to 2 of\nhis goods(from his production buildings) instead of cards from\nhis hand, placing them face down on the discard stack just\nlike cards from his hand.\n",
-                                            "\nbuilder phase\nThe owner of a crane may overbuild any of his existing buildings, placing the\nnew building card completely covering the old card. By doing\nso, he reduces the cost of the new building by the cost of\nthe old building.\n",
-                                            "\nbuilder phase\nAfter the owner of a carpenter builds a violet building and paysthe buildingcost,\nhe may draw 1 card from the cardsupply and add it to his hand.\nThe carpenter has no special function when the player\nbuilds a production building.\n",
-                                            "\nbuilder phase\nWhen the owner of a quarry builds a violet building, he pays 1 card less to build\nthe building.The quarry has no special function when the player\nbuilds a production building.\n",
-                                            "\nproducer phase\nIn the producer phase, if the owner of a well produces at least 2 goods, he draws an additional card from\nthe cardsupply, adding it to hishand. It matters not whether he\nis the producer or not.\n",
-                                            "\nproducer phase\nIn the producer phase, the owner of an aquaduct may produce 1 more good than otherwise possible\n",
-                                            "\ntrader phase\nDuring the trader phase, if the owner of a market stand sells at least 2 goods,\nhe draws an additional card from the cardsupply, adding it to his hand.\nIt matters not whether he is the trader or not.\n",
-                                            "\ntrader phase\nWhen the owner of a market hall sells at least one good,he draws 1 card more than\nthe price of the good sold from the card supply. If he sells more than 1 good,\nhe only draws one extra card, not 1 extra\ncard for each good sold.\n",
-                                            "\ntrader phase\nDuring the trader phase, the owner of a trading post may sell 1 additional good from\nhis production buildings.\n",
-                                            "\ncouncillor phase\nWhen any player selects the councillor role, the owner of an archive adds all cards\nhe draws to his hand and then chooses which cards to discard from his entire hand.\nIn other words,the player may discard drawn cards or cards he\nalready had in his hand instead of just drawn cards.\n",
-                                            "\ncouncillor phase\nIn the councillor phase, the owner of a prefecture may keep 2 cards instead of 1\n",
-                                            "\nprospector phase\nAfter a player selects the prospector role and takes the privilege (or not),\neach player who owns a gold mine, in clockwise order,may turn over\nthe top-most 4 cards from the card supply, placing them face up on the table:\n• if all four cards have different building costs,\nthe player adds any one of the cards to his hand and discards the other 3 cards face down on the discard stack.\n• if at least 2 of the cards have the same building cost, the player gets no card\nand discards all 4 cards face down onthe discard stack.\n",
-                                            "\nall phases\nThe owner of a library may double the privilege of the role he selects.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\nMomument\nNo special effect.\n",
-                                            "\ngame end\nAt game end, the owner of a guild hall scores 2 victory points for each production building\nin his play area.\n",
-                                            "\ngame end\nAt game end, the owner of a city hall scores 1 victory point for each violet building\nin his play area.\n",
-                                            "\ngame end\nAt game end, the owner of a triumphal arch scores victory points(VP) for the monuments\nin hisplay area: for 1 monument he scores 4 VP, for 2 monument she scores 6 VP,\nand for 3 monuments he scores 8 VP.\n",
-                                            "\ngame end\nAt game end, the owner of a palace scores an extra 1/4 of his victory points\n"}};
+
     for (i32 i = 0; i < 5; i++)
     {
         roles[i].used = 0;
@@ -258,11 +158,11 @@ void mainGame()
                 gameProgressing = 0;
                 break;
             }
-        if(nowPlaying==0)
-            printf("%s\n%s%s\n", newRound[language],roundGovernor[language],player[language]);
+        if (nowPlaying == 0)
+            printf("%s\n%s%s\n", newRound[language], roundGovernor[language], player[language]);
         else
-            printf("%s\n%sCPU %d\n", newRound[language],roundGovernor[language],nowPlaying);
-        if(discardSize > 80)
+            printf("%s\n%sCPU %d\n", newRound[language], roundGovernor[language], nowPlaying);
+        if (discardSize > 80)
             recycleCard();
         //PRINTDECK
         roleReset(roles); //reset role
@@ -355,7 +255,7 @@ void about()
 }
 void setting()
 {
-    string choooseSetting[2] = {"1)Game setting\n2)Language\n", "1)遊戲選項\n2)語言選項\n"};
+    string choooseSetting[2] = {"\tSetting\n1)Game Setting\n2)Language\n", "\t設定\n1)遊戲選項\n2)語言選項\n"};
     string settingStr[2] = {"\tChoose a language\n\n1)English\n2)中文\n", "\t選擇語言\n\n1)English\n2)中文\n"};
     printf("%s", choooseSetting[language]);
     u8 choice = -1;
@@ -369,7 +269,7 @@ void setting()
     CLEAN
     if (choice == 1)
     {
-        string gameSetting[2] = {"1)CPU level\n2)Ending requirement\n", "1)CPU 難度\n2)結束條件\n"};
+        string gameSetting[2] = {"\tGame Setting\n1)CPU level\n2)Ending requirement\n", "\t遊戲設定\n1)CPU 難度\n2)結束條件\n"};
         printf("%s", gameSetting[language]);
         scanf("%hhd", &choice);
         while ((choice > 2 || choice < 1))
@@ -470,7 +370,10 @@ void readDes(u8 p, u8 mode)
             CLEAN
             if (choice == players[p].boardCount + 1)
                 break;
-            printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", players[p].board[choice - 1].cardName, players[p].board[choice - 1].cost, players[p].board[choice - 1].vp, players[p].board[choice - 1].description);
+            if (language)
+                printf("\t%s\n花費:%d\n勝利點數:%d\n\n%s", players[p].board[choice - 1].cardName, players[p].board[choice - 1].cost, players[p].board[choice - 1].vp, players[p].board[choice - 1].description);
+            else
+                printf("\t%s\nCost:%d\nVictory Point:%d\n\n%s", players[p].board[choice - 1].cardName, players[p].board[choice - 1].cost, players[p].board[choice - 1].vp, players[p].board[choice - 1].description);
 
             setbuf(stdin, NULL);
         }
@@ -773,16 +676,56 @@ void sell(player *p, u8 card, u8 price)
 }
 void computerAction(player *p)
 {
-    SLEEP
     string cardUsed[2] = {"chooses", "選擇"};
-    u8 actionChoice = rand() % 5;
-    while (roles[actionChoice].used)
+    SLEEP
+    if (cpuLevel == 1)
     {
-        actionChoice = rand() % 5;
+        u8 actionChoice = rand() % 5;
+        while (roles[actionChoice].used)
+        {
+            actionChoice = rand() % 5;
+        }
+        printf("CPU  %d %s %s\n\n", p->playerOrder, cardUsed[language], roles[actionChoice].roleName);
+        roles[actionChoice].used = 1;
+        roleFunc[actionChoice](players, p->playerOrder);
     }
-    printf("CPU  %d %s %s\n\n", p->playerOrder, cardUsed[language], roles[actionChoice].roleName);
-    roles[actionChoice].used = 1;
-    roleFunc[actionChoice](players, p->playerOrder);
+    else if (cpuLevel == 2)
+    {
+        u8 actionChoice = rand() % 5;
+        if (!roles[2].used && p->productsCount >= 2) //choose trader if can and has two or more product
+        {
+            actionChoice = 2;
+        }
+        else if (p->productsCount == 0)
+        {
+            while (roles[actionChoice].used && actionChoice == 2)
+            {
+                actionChoice = rand() % 5;
+            }
+        }
+        else if (p->cardCount <= 1)
+        {
+            while (roles[actionChoice].used && actionChoice == 0)
+            {
+                actionChoice = rand() % 5;
+            }
+        }
+        else if (!roles[0].used && p->cardCount > 6)
+        {
+            actionChoice = 0;
+        }
+        else
+        {
+            while (roles[actionChoice].used)
+            {
+                actionChoice = rand() % 5;
+            }
+        }
+        printf("CPU  %d %s %s\n\n", p->playerOrder, cardUsed[language], roles[actionChoice].roleName);
+        roles[actionChoice].used = 1;
+        roleFunc[actionChoice](players, p->playerOrder);
+    }
+
     return;
 }
 void roleReset(role r[])
@@ -896,6 +839,11 @@ void loadGame()
 void saveGame()
 {
     save(language, players, playercnt, GAMEEND, cpuLevel, deck, discard, roles);
+}
+void openEditor()
+{
+    system("./Editor");
+    return;
 }
 //role functions
 void builder(player p[], u8 goveror)
@@ -1230,17 +1178,53 @@ void builder(player p[], u8 goveror)
         {
             SLEEP
             i8 played = -1;
-            for (i32 i = 0; i < p[nowPlaying].cardCount; i++)
+
+            if (cpuLevel == 1)
             {
-                //printf("card count %d \n", p[nowPlaying].cardCount);
-                //printf("%d > %d\n", p[nowPlaying].cardCount, p[nowPlaying].hand[i].cost - costdown);
-                if (p[nowPlaying].cardCount > p[nowPlaying].hand[i].cost - costdown)
+                u8 originCostdown = costdown;
+                for (i32 i = 0; i < p[nowPlaying].cardCount; i++)
                 {
-                    played = i;
-                    break;
+                    costdown = 0;
+                    //check quarry
+                    if (p[nowPlaying].quarry)
+                        if (p[nowPlaying].hand[i].id > 4)
+                            costdown++;
+                    //check smithy
+                    if (p[nowPlaying].smithy)
+                        if (p[nowPlaying].hand[i].id <= 4)
+                            costdown++;
+                    if (p[nowPlaying].cardCount > p[nowPlaying].hand[i].cost - costdown)
+                    {
+                        played = i;
+                        break;
+                    }
+                    costdown = originCostdown;
                 }
             }
-            //printf("play %d\n", played);
+            else if (cpuLevel == 2)
+            {
+                i8 tmp = -1;
+                u8 originCostdown = costdown;
+                for (i32 i = 0; i < p[nowPlaying].cardCount; i++)
+                {
+                    //check quarry
+                    if (p[nowPlaying].quarry)
+                        if (p[nowPlaying].hand[i].id > 4)
+                            costdown++;
+                    //check smithy
+                    if (p[nowPlaying].smithy)
+                        if (p[nowPlaying].hand[i].id <= 4)
+                            costdown++;
+                    if (p[nowPlaying].cardCount > p[nowPlaying].hand[i].cost - costdown)
+                    {
+                        if (p[nowPlaying].hand[i].cost > p[nowPlaying].hand[tmp].cost)
+                            tmp = i;
+                    }
+                    costdown = originCostdown;
+                }
+                played = tmp;
+            }
+
             if (played >= 0 && p[nowPlaying].cardCount != 0)
             {
                 p[nowPlaying].hand[played].place = 3;
@@ -1345,25 +1329,58 @@ void producer(player p[], u8 goveror)
         {
             SLEEP
             u8 isProduce = 0;
+
             for (i32 j = 0; j < 1 + extra; j++)
             {
-                for (i32 i = 0; i < p[nowPlaying].boardCount; i++)
+                if (cpuLevel == 1)
                 {
-                    if (p[nowPlaying].board[i].id < 5 && !p[nowPlaying].board[i].hasProduct && !p[nowPlaying].board[i].type)
+                    for (i32 i = 0; i < p[nowPlaying].boardCount; i++)
                     {
+                        if (p[nowPlaying].board[i].id < 5 && !p[nowPlaying].board[i].hasProduct && !p[nowPlaying].board[i].type)
+                        {
 
-                        produce(&p[nowPlaying], i);
-                        printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, produceText[language], productName[language][p[nowPlaying].board[i].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
-                        isProduce = 1;
-                        produceWellCount++;
+                            produce(&p[nowPlaying], i);
+                            printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, produceText[language], productName[language][p[nowPlaying].board[i].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
+                            isProduce = 1;
+                            produceWellCount++;
+                            break;
+                        }
+                    }
+                    if (!isProduce)
+                    {
+                        const string noProduce[2] = {"produced nothing.", "沒有生產"};
+                        printf("%s %d %s\n", CPUdraw[language][0], nowPlaying, noProduce[language]);
                         break;
                     }
                 }
-                if (!isProduce)
+                else if (cpuLevel == 2)
                 {
-                    const string noProduce[2] = {"produced nothing.", "沒有生產"};
-                    printf("%s %d %s\n", CPUdraw[language][0], nowPlaying, noProduce[language]);
-                    break;
+                    u8 best = -1;
+                    for (i32 i = 0; i < p[nowPlaying].boardCount; i++)
+                    {
+                        if (p[nowPlaying].board[i].id < 5 && !p[nowPlaying].board[i].hasProduct && !p[nowPlaying].board[i].type)
+                        {
+                            isProduce = 1;
+                            if (best == 255)
+                                best = i;
+                            else if (p[nowPlaying].board[i].id > p[nowPlaying].board[best].id)
+                                best = i;
+                        }
+                    }
+                    if (!isProduce)
+                    {
+                        const string noProduce[2] = {"produced nothing.", "沒有生產"};
+                        printf("%s %d %s\n", CPUdraw[language][0], nowPlaying, noProduce[language]);
+                        break;
+                    }
+                    else
+                    {
+                        printf("%d\n", best);
+                        produce(&p[nowPlaying], best);
+                        printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, produceText[language], productName[language][p[nowPlaying].board[best].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
+                        isProduce = 1;
+                        produceWellCount++;
+                    }
                 }
             }
         }
@@ -1499,9 +1516,11 @@ void councilor(player p[], u8 goveror)
                 const string reduce[2] = {"Please choose a card to discard.", "請選擇1張牌捨棄"};
                 for (i32 i = 0; i < cnt; i++)
                     draw(&p[nowPlaying]);
-                printPlayerCard(&p[nowPlaying]);
+
                 for (i32 i = 0; i < cnt - keepCard; i++)
                 {
+                    CLEAN
+                    printPlayerCard(&p[nowPlaying]);
                     u8 max = p[nowPlaying].cardCount;
                     printf("%s (%d/%d)\n", reduce[language], i, cnt - keepCard);
                     u8 choice = -1;
@@ -1720,7 +1739,7 @@ void carpenter(player *p) //id 11
 }
 void quarry(player *p) //id 12
 {
-    const string effect[2] = {"Quarry\'s effect,you can pay 1 less while building a city building.", "採石場效果，建造都市建築時可以少支付一個費用"};
+    const string effect[2] = {"Quarry\'s effect,you can pay 1 less while building a violet building.", "採石場效果，建造都市建築時可以少支付一個費用"};
     if (searchBoard(p, 12) != 0)
     {
         printf("%s\n", effect[language]);

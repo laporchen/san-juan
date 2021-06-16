@@ -218,8 +218,8 @@ void printHand(player *p)
         printf("%s\n", none[lang]);
 
     for (i32 i = 0; i < p->cardCount; i++)
-    {
-        printf("%2d)%s %d\n", i + 1, p->hand[i].cardName, p->hand[i].place);
+    {   
+        printf("%2d)%s\n", i + 1, p->hand[i].cardName);
     }
     return;
 }
@@ -232,7 +232,7 @@ void printBoard(player *p)
         printf("%s\n", none[lang]);
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        printf("%2d)%s %d\n", i + 1, p->board[i].cardName, p->board[i].place);
+        printf("%2d)%s\n", i + 1, p->board[i].cardName);
     }
     return;
 }
@@ -368,12 +368,13 @@ void addCard(player *p, card c[110])
             break;
         }
     }
-    printf("%d\n", deckIndex);
+
     if (deckIndex == -1)
         return;
     giveCard(p, c[deckIndex]);
     card empty = {0};
     c[deckIndex] = empty;
+    CLEAN
     return;
 }
 void delCard(player *p, card dis[110], card d[110])
@@ -392,6 +393,8 @@ void delCard(player *p, card dis[110], card d[110])
         scanf("%hhd", &choice);
     }
     discardCard(p, choice - 1, d);
+    CLEAN
+    return;
 }
 void addBoard(player *p, card c[110])
 {
@@ -424,6 +427,7 @@ void addBoard(player *p, card c[110])
     card empty = {0};
     c[deckIndex] = empty;
     deckSize--;
+    CLEAN
     return;
 }
 void delBoard(player *p, card dis[110], card c[110])
@@ -457,4 +461,6 @@ void delBoard(player *p, card dis[110], card c[110])
     card empty = {0};
     p->board[p->boardCount - 1] = empty;
     p->boardCount--;
+    CLEAN
+    return;
 }
