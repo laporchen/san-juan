@@ -32,7 +32,7 @@ u8 cpuLevel = 1;
 u8 gameIsLoaded = 0;
 u8 loadedOrder = -1;
 u8 gameProgressing = 1;
-void (*menuFunc[5])() = {mainGame, loadGame, about, setting,openEditor};
+void (*menuFunc[5])() = {mainGame, loadGame, about, setting, openEditor};
 void (*roleFunc[5])(player p[], u8 governor) = {builder, producer, trader, councilor, prospector};
 
 role roles[5] = {0};
@@ -1934,17 +1934,21 @@ void guildHall(player *p, u8 *vp) //id = 26
         }
     if (!hasGuild)
         return;
+    u8 type[5] = {0, 0, 0, 0, 0};
     for (i32 i = 0; i < p->boardCount; i++)
     {
         u8 id = p->board[i].id;
         if (id < 5)
         {
-            fac += 2;
+            fac += 1;
+            type[i] = 1;
         }
     }
-    *vp += fac;
-    return;
 
+    for (i32 i = 0; i < 5; i++)
+        *vp += type[i];
+
+    *vp += fac;
     return;
 }
 void cityHall(player *p, u8 *vp)
