@@ -32,6 +32,7 @@ u8 cpuLevel = 1;
 u8 gameIsLoaded = 0;
 u8 loadedOrder = -1;
 u8 gameProgressing = 1;
+u8 gameSaved = 0;
 void (*menuFunc[5])() = {mainGame, loadGame, about, setting, openEditor};
 void (*roleFunc[5])(player p[], u8 governor) = {builder, producer, trader, councilor, prospector};
 
@@ -67,6 +68,7 @@ void menu()
         {
             menuFunc[option - 1]();
         }
+        gameSaved = 0;
     }
     return;
 }
@@ -145,8 +147,8 @@ void mainGame()
         CLEAN
         setbuf(stdin, NULL);
         init(playercnt);
+        gameProgressing = 1;
     }
-
     u8 nowPlaying = loadedOrder;
     if (loadedOrder > playercnt)
         nowPlaying = rand() % playercnt;
@@ -511,7 +513,7 @@ void printPlayerBoard(player *p)
     }
     return;
 }
-void chooseRole(u8 goveror)
+void chooseRole(u8 governor)
 {
     string chooseRoleText[2] = {{"Choose a role\n"},
                                 {"選擇一項職業\n"}};
@@ -558,7 +560,7 @@ void chooseRole(u8 goveror)
             if (choice2 == 1 && !roles[choice - 1].used)
             {
                 roles[choice - 1].used = 1;
-                roleFunc[choice - 1](players, goveror);
+                roleFunc[choice - 1](players, governor);
                 return;
             }
             else if (choice2 == 1 && roles[choice - 1].used)
@@ -739,8 +741,9 @@ void roleReset(role r[])
 void reduceCard(player *p)
 {
     string reduce[2] = {"Please choose a card to discard.", "請選擇1張牌捨棄"};
+    string cpu[2] = {"discards a card.", "丟棄了一張牌"};
     i8 max = p->maxCard;
-
+    printf("%d %d\n", p->cardCount, max);
     while (p->cardCount > max)
     {
         if (p->playerOrder == 0)
@@ -763,6 +766,7 @@ void reduceCard(player *p)
         {
             u8 choice = rand() % p->cardCount;
             discardCard(p, choice);
+            printf("CPU %d %s\n", p->playerOrder, cpu[language]);
         }
     }
     return;
@@ -831,14 +835,22 @@ void loadGame()
             }
             nowPlaying++;
             nowPlaying %= playercnt;
+            if (gameSaved)
+                break;
         }
-        gameIsLoaded = 1;
-        mainGame();
+        if (!gameSaved)
+        {
+            gameIsLoaded = 1;
+            mainGame();
+        }
     }
+    return;
 }
 void saveGame()
 {
+    gameSaved = 1;
     save(language, players, playercnt, GAMEEND, cpuLevel, deck, discard, roles);
+    CLEAN
 }
 void openEditor()
 {
@@ -1405,7 +1417,6 @@ void trader(player p[], u8 goveror)
     printf("%s\n", priceText[language]);
     for (i32 i = 0; i < 5; i++)
         printf("%s %s %d\n", productName[language][i], value[language], priceList[priceTag][i]);
-
     for (i32 c = 0; c < playercnt; c++)
     {
         if (nowPlaying == 0)
@@ -1432,8 +1443,7 @@ void trader(player p[], u8 goveror)
                 printf("%s\n", whatToSell[language]);
                 scanf("%hhd", &choice);
                 u8 maxChoice = p[nowPlaying].boardCount + 1;
-
-                while (!(choice == maxChoice) && !(choice > maxChoice || choice < 1) && (!(p[nowPlaying].board[choice - 1].type == 0) || (p[nowPlaying].board[choice - 1].hasProduct == 0)))
+                while (!(choice == maxChoice) && ((choice > maxChoice || choice < 1) || (!(p[nowPlaying].board[choice - 1].type == 0) || (p[nowPlaying].board[choice - 1].hasProduct == 0))))
                 {
 
                     if (choice > maxChoice || choice < 1)
@@ -1934,20 +1944,14 @@ void guildHall(player *p, u8 *vp) //id = 26
         }
     if (!hasGuild)
         return;
-    u8 type[5] = {0, 0, 0, 0, 0};
     for (i32 i = 0; i < p->boardCount; i++)
     {
         u8 id = p->board[i].id;
         if (id < 5)
         {
-            fac += 1;
-            type[i] = 1;
+            fac += 2;
         }
     }
-
-    for (i32 i = 0; i < 5; i++)
-        *vp += type[i];
-
     *vp += fac;
     return;
 }

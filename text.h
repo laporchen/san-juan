@@ -1,6 +1,7 @@
 #include "struct.h"
 
 //card-------------------------------------------------------------------------
+
 const string productName[2][5] = {{"\033[0;35mIndigo\033[0m", "\033[0;33mSugar\033[0m", "\033[0;32mTabacco\033[0m", "\033[0;34mCoffee\033[0m", "\033[0;36mSilver\033[0m"},
                                   {"\033[0;35m染料\033[0m", "\033[0;33m糖\033[0m", "\033[0;32m菸草\033[0m", "\033[0;34m咖啡\033[0m", "\033[0;36m白銀\033[0m"}};
 const string CPUdraw[2][2] = {{"CPU ", " drawed.\n"}, {"CPU ", " 抽了卡\n"}};
@@ -18,6 +19,7 @@ const string pass[2] = {"You pass.\n", "你選擇跳過\n"};
 const string passChoice[2] = {"Pass", "跳過"};
 const string produceText[2] = {"produce", "生產"};
 const string yourTurn[2] = {"It's your turn.", "輪到你了"};
+
 //card-------------------------------------------------------------------------
 
 const string cardNameData[2][30] = {{"\033[0;35mIndigo plant\033[0m", "\033[0;33mSugar Mill\033[0m", "\033[0;32mTobacco storage\033[0m",
@@ -29,6 +31,7 @@ const string cardNameData[2][30] = {{"\033[0;35mIndigo plant\033[0m", "\033[0;33
                                     {"\033[0;35m染料廠\033[0m", "\033[0;33m蔗糖廠\033[0m", "\033[0;32m菸草廠\033[0m", "\033[0;34m咖啡廠\033[0m", "\033[0;36m白銀廠\033[0m", "塔樓", "禮拜堂", "鐵匠鋪", "救濟院",
                                      "黑市", "起重機", "木工場", "採石場", "水井", "溝渠", "攤販", "市場", "交易所", "檔案館", "辦公處", "金礦坑", "圖書館",
                                      "雕鑄像紀念碑", "勝利柱紀念碑", "英雄像紀念碑", "同業會館", "市政廳", "凱旋門", "宮殿"}};
+
 //textLanguage-----------------------------------------------------------------
 
 const string startMenuText[2] = {"\tSAN JUAN\n\n1)New Game\n2)Load Game\n3)About Project\n4)Setting\n5)Save Ediotr\n6)Quit\nPlease choose a option.\n", "\t聖胡安\n\n1)新遊戲\n2)讀取遊戲\n3)關於\n4)設定\n5)存檔編輯器\n6)離開\n請選擇。\n"};
@@ -50,6 +53,7 @@ const string roleDescription[2][5] = {{"Action\nStart from governor's left,clock
                                        "行動\n從總督左邊開始，順時鐘方向，玩家抽2張牌選擇1張留著。\n\n特權\n總督可以抽5張牌並選擇1張留著。\n",
                                        "行動\n無。\n\n特權\n總督可以抽1張牌。\n"}};
 const string cardDescription[2][30] = {{"\nproducer phase\nowner produces 1 indigo\n",
+
                                         "\nproducer phase\nowner produces 1 sugar\n",
                                         "\nproducer phase\nowner produces 1 tobacco\n",
                                         "\nproducer phase\nowner produces 1 coffee\n",
@@ -107,3 +111,4 @@ const string cardDescription[2][30] = {{"\nproducer phase\nowner produces 1 indi
                                         "\n遊戲結束\n遊戲結束時，已打出此張卡牌的玩家每擁有1棟特殊建築物(包括此張卡牌)可額外獲得1分\n",
                                         "\n遊戲結束\n遊戲結束時，已打出此張卡牌的玩家若擁有1種紀念碑卡可額外獲得4分，擁有2種紀念碑卡可額外獲得6分，擁有3種紀念碑卡可額外獲得8分\n",
                                         "\n遊戲結束\n遊戲結束時，已打出此張卡牌的玩家可額外獲得該玩家總分的四分之一分數\n"}};
+                                       

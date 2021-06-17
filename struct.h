@@ -46,7 +46,6 @@ typedef struct _player
     card board[15];
     u8 point;
     u8 playerOrder;
-    u8 councilorExtraDraw;
     u8 extraProduce;
     u8 extraTrade;
     u8 extraCard;

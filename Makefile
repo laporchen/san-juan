@@ -7,3 +7,4 @@ clean:
 	rm sanJuan.o
 	rm SanJuanTheGame
 	rm Editor
+	rm saving.o
