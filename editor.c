@@ -161,7 +161,10 @@ void printDeck(card d[110])
     {
         if (d[i].place == 1)
         {
-            printf("%3d)%s\n", index + 1, d[i].cardName);
+            if (lang)
+                printf("%3d)%s\t花費:%d 勝利點數:%d\n",index+1,d[i].cardName,d[i].cost,d[i].vp );
+            else
+                printf("%3d)%s\tCost:%d Victory point:%d\n",index+1,d[i].cardName,d[i].cost,d[i].vp);
             index++;
         }
     }
@@ -179,7 +182,10 @@ void printDiscardDeck(card d[110])
     {
         if (d[i].place == 0 && d[i].cost != 0)
         {
-            printf("%3d)%s\n", index + 1, d[i].cardName);
+            if (lang)
+                printf("%3d)%s\t花費:%d 勝利點數:%d\n",index+1,d[i].cardName,d[i].cost,d[i].vp );
+            else
+                printf("%3d)%s\tCost:%d Victory point:%d\n",index+1,d[i].cardName,d[i].cost,d[i].vp);
             index++;
         }
     }

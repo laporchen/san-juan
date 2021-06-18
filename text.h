@@ -36,7 +36,7 @@ const string cardNameData[2][30] = {{"\033[0;35mIndigo plant\033[0m", "\033[0;33
 
 const string startMenuText[2] = {"\tSAN JUAN\n\n1)New Game\n2)Load Game\n3)About Project\n4)Setting\n5)Save Ediotr\n6)Quit\nPlease choose a option.\n", "\t聖胡安\n\n1)新遊戲\n2)讀取遊戲\n3)關於\n4)設定\n5)存檔編輯器\n6)離開\n請選擇。\n"};
 const string invalid[2] = {"Invalid option,please try another one.\n", "無效的選項，請再試一次。\n"};
-const string bye[2] = {"See Ya\n", "88\n"};
+const string bye[2] = {"See Ya\n", "再見 : )\n"};
 
 //textLanguage-----------------------------------------------------------------
 //cardStuff--------------------------------------------------------------------

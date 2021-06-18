@@ -30,7 +30,7 @@ u8 cardLeftInDeck = DECKSIZE;
 u8 GAMEEND = 12;
 u8 cpuLevel = 1;
 u8 gameIsLoaded = 0;
-u8 loadedOrder = -1;
+u8 loadedOrder = 255;
 u8 gameProgressing = 1;
 u8 gameSaved = 0;
 void (*menuFunc[5])() = {mainGame, loadGame, about, setting, openEditor};
@@ -44,6 +44,7 @@ u8 discardSize = 0;
 u8 discardDeckOrder = 0;
 void menu()
 {
+    CLEAN
     setbuf(stdin, NULL);
     while (1)
     {
@@ -62,6 +63,8 @@ void menu()
         if (option == 6)
         {
             printf("%s", bye[language]);
+            SLEEP
+            CLEAN
             break;
         }
         else
@@ -134,6 +137,7 @@ void mainGame()
     const string player[2] = {"player", "玩家"};
     if (gameIsLoaded != 1)
     {
+
         printf("%s", gamestart[language]);
         scanf("%hhd", &playercnt);
         while ((playercnt > 3 || playercnt < 1))
@@ -154,6 +158,7 @@ void mainGame()
         nowPlaying = rand() % playercnt;
     while (gameProgressing == 1)
     {
+
         for (i32 j = 0; j < playercnt; j++)
             if (players[j].boardCount == GAMEEND)
             {
@@ -168,10 +173,11 @@ void mainGame()
             recycleCard();
         //PRINTDECK
         roleReset(roles); //reset role
+        SLEEP
         //Check tower
         for (i32 i = 0; i < playercnt; i++)
         {
-            tower(&players[nowPlaying]);
+            tower(&players[(nowPlaying + i) % playercnt]);
         }
         for (i32 i = 0; i < playercnt; i++)
             chapel(&players[(nowPlaying + i) % playercnt]);
@@ -245,7 +251,21 @@ void GameEnd()
             printf("CPU %d %d\n", order[i], vp[i]);
         }
     }
-    printf("\n\n\n\n\n");
+    const string enter[2] = {"Press Enter to continue.", "按下ENTER繼續"};
+    printf("%s", enter[language]);
+    int buf1 = getchar();
+    int buf2 = getchar();
+    {
+        language = 1;
+        playercnt = -1;
+        cardLeftInDeck = DECKSIZE;
+        GAMEEND = 12;
+        cpuLevel = 1;
+        gameIsLoaded = 0;
+        loadedOrder = 255;
+        gameProgressing = 1;
+        gameSaved = 0;
+    }
     return;
 }
 void about()
@@ -322,6 +342,7 @@ void setting()
         language = la - 1;
         CLEAN
     }
+    CLEAN
     return;
 }
 void printPlayerStatus(player *p)
@@ -504,7 +525,7 @@ void printPlayerBoard(player *p)
     for (i32 i = 0; i < p->boardCount; i++)
     {
 
-        printf("%d)%s %s ", i + 1, p->board[i].cardName, hasProduct[language][p->board[i].hasProduct]);
+        printf("%d)%s %s", i + 1, p->board[i].cardName, hasProduct[language][p->board[i].hasProduct]);
         if (p->board[i].extraValue != 0)
         {
             printf("%s %d", extraScore[language], p->board[i].extraValue);
@@ -680,6 +701,7 @@ void computerAction(player *p)
 {
     string cardUsed[2] = {"chooses", "選擇"};
     SLEEP
+    CLEAN
     if (cpuLevel == 1)
     {
         u8 actionChoice = rand() % 5;
@@ -743,7 +765,6 @@ void reduceCard(player *p)
     string reduce[2] = {"Please choose a card to discard.", "請選擇1張牌捨棄"};
     string cpu[2] = {"discards a card.", "丟棄了一張牌"};
     i8 max = p->maxCard;
-    printf("%d %d\n", p->cardCount, max);
     while (p->cardCount > max)
     {
         if (p->playerOrder == 0)
@@ -782,8 +803,10 @@ u8 searchBoard(player *p, u8 id)
 {
     u8 cnt = 0;
     for (i32 i = 0; i < p->boardCount; i++)
+    {
         if (p->board[i].id == id)
             cnt++;
+    }
     return cnt;
 }
 void giveCard(player *p, card c)
@@ -822,7 +845,7 @@ void loadGame()
         for (i32 i = 0; i < 5; i++)
             cnt += roles[i].used;
 
-        loadedOrder = (cnt + 1) % playercnt;
+        loadedOrder = (4 - (cnt) + 1) % playercnt;
         for (i32 i = savefileToLoad.nowPlaying; i < playercnt; i++)
         {
             if (nowPlaying == 0)
@@ -868,15 +891,15 @@ void builder(player p[], u8 goveror)
         smithy(&p[nowPlaying]);
         quarry(&p[nowPlaying]);
         library(&p[nowPlaying]);
-        crane(&p[nowPlaying]);
         blackMarket(&p[nowPlaying]);
+        crane(&p[nowPlaying]);
+
         u8 costdown = 0;
         if (nowPlaying == goveror)
             costdown += 1 * p[nowPlaying].library;
 
         if (nowPlaying == 0)
         {
-
             u8 useCrane;
             if (p[nowPlaying].crane)
             {
@@ -890,6 +913,7 @@ void builder(player p[], u8 goveror)
             if (useCrane == 1)
             {
                 CLEAN
+                const string nocrane[2] = {"Crane cannot be the target", "起重機不能被選擇"};
                 const string craneText[2] = {"Choose a build to build over", "選擇一項建築來重蓋"};
                 const string choicedBuilding[2] = {"Chosed building : ", "選擇的建築 : "};
                 const string goback[2] = {"Return", "返回"};
@@ -900,9 +924,12 @@ void builder(player p[], u8 goveror)
                     printf("%s\n", craneText[language]);
                     u8 choice = -1;
                     scanf("%hhd", &choice);
-                    while (choice > p[nowPlaying].boardCount + 1 || choice < 1)
+                    while (choice > p[nowPlaying].boardCount + 1 || choice < 1 || p->board[choice - 1].id == 10)
                     {
-                        INVALID
+                        if (p->board[choice - 1].id == 10)
+                            printf("%s\n", nocrane[language]);
+                        else
+                            INVALID
                         scanf("%hhd", &choice);
                     }
                     if (choice == p[nowPlaying].boardCount + 1)
@@ -912,10 +939,10 @@ void builder(player p[], u8 goveror)
                     }
                     else
                     {
+                        u8 rebuild = choice - 1;
                         CLEAN
-                        u8 chosed = choice - 1;
                         choice = -1;
-                        printf("%s%s\n", choicedBuilding[language], p[nowPlaying].board[chosed].cardName);
+                        printf("%s%s\n", choicedBuilding[language], p[nowPlaying].board[rebuild].cardName);
                         printPlayerCard(&p[nowPlaying]);
                         printf("%d)%s\n", p[nowPlaying].cardCount + 1, passChoice[language]);
                         u8 choice = -1;
@@ -937,13 +964,19 @@ void builder(player p[], u8 goveror)
                         //check blackmarket
                         u8 blackMarketLimit = 0;
                         if (p[nowPlaying].blackMarket)
-                            blackMarketLimit = MIN(2, p[nowPlaying].blackMarket);
-                        if (blackMarketLimit != 0 && choice >= 1 && choice <= p[nowPlaying].cardCount)
-                            if (p[nowPlaying].board[chosed].hasProduct)
-                                blackMarketLimit = MIN(2, p[nowPlaying].blackMarket - 1);
+                            blackMarketLimit = MIN(2, p[nowPlaying].productsCount);
 
-                        i8 finalCost = (p[nowPlaying].hand[choice - 1].cost - costdown - p[nowPlaying].board[chosed].cost);
+                        if (blackMarketLimit != 0 && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                            if (p[nowPlaying].board[rebuild].hasProduct)
+                            {
+                                p->productsCount--;
+                                blackMarketLimit = MIN(2, p[nowPlaying].productsCount);
+                            }
+
+                        i8 finalCost = (p[nowPlaying].hand[choice - 1].cost - costdown - p[nowPlaying].board[rebuild].cost);
                         u8 cannotPlay = (p[nowPlaying].cardCount + blackMarketLimit == 0) || (choice > p[nowPlaying].cardCount + 1 || choice < 1 || !(p[nowPlaying].cardCount + blackMarketLimit > finalCost));
+                        if (choice == p[nowPlaying].cardCount + 1)
+                            continue;
                         while (cannotPlay)
                         {
                             if (choice > p[nowPlaying].cardCount + 1 || choice < 1)
@@ -960,6 +993,14 @@ void builder(player p[], u8 goveror)
                             if (p[nowPlaying].smithy && choice >= 1 && choice <= p[nowPlaying].cardCount)
                                 if (p[nowPlaying].hand[choice - 1].id <= 4)
                                     costdown++;
+                            if (p[nowPlaying].blackMarket)
+                                blackMarketLimit = MIN(2, p[nowPlaying].blackMarket);
+                            if (blackMarketLimit != 0 && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                                if (p[nowPlaying].board[rebuild].hasProduct)
+                                {
+                                    p->productsCount--;
+                                    blackMarketLimit = MIN(2, p->productsCount);
+                                }
                         }
                         if (choice == p[nowPlaying].cardCount + 1)
                             continue;
@@ -969,15 +1010,9 @@ void builder(player p[], u8 goveror)
                                 finalCost = 1;
                             u8 played = choice - 1;
                             i8 cardCost = finalCost;
-                            u8 emptySlot = 0;
-                            u8 extraValue = p[nowPlaying].board[chosed].extraValue;
-                            discardCard(&p[nowPlaying], chosed);
-
-                            while (p[nowPlaying].board[emptySlot].place != 0)
-                                emptySlot++;
-                            p[nowPlaying].board[emptySlot] = p[nowPlaying].hand[played];
-                            p[nowPlaying].board[emptySlot].place = 2;
-                            p[nowPlaying].board[emptySlot].extraValue = extraValue;
+                            u8 extraValue = p[nowPlaying].board[rebuild].extraValue;
+                            //discardCard(&p[nowPlaying], rebuild);
+                            card tmp = p[nowPlaying].hand[played];
                             card empty = {0};                                                             //to reset moved card
                             p[nowPlaying].hand[played] = empty;                                           //reset moved last card
                             p[nowPlaying].hand[played] = p[nowPlaying].hand[p[nowPlaying].cardCount - 1]; //take player's last card and place it in the empty spot
@@ -1046,17 +1081,21 @@ void builder(player p[], u8 goveror)
                                 }
                                 CLEAN
                             }
-                            p[nowPlaying].boardCount++;
-                            printf("%s %s\n\n", built[language], p[nowPlaying].board[emptySlot].cardName);
-                            if (p[nowPlaying].board[emptySlot].id > 4)
+                            p[nowPlaying].board[rebuild] = tmp;
+                            p[nowPlaying].board[rebuild].place = 2;
+                            p[nowPlaying].board[rebuild].extraValue = extraValue;
+                            p[nowPlaying].board[rebuild].hasProduct = 0;
+                            printf("%s %s\n\n", built[language], p[nowPlaying].board[rebuild].cardName);
+                            if (p[nowPlaying].board[rebuild].id > 4)
                                 carpenter(&p[nowPlaying]);
                             break;
                         }
                     }
                 }
             }
-            else if (p[nowPlaying].crane == 0)
+            else if (p[nowPlaying].crane == 0 || useCrane == 2)
             {
+                CLEAN
                 printPlayerCard(&p[nowPlaying]);
                 printf("%d)%s\n", p[nowPlaying].cardCount + 1, passChoice[language]);
                 u8 choice = -1;
@@ -1074,27 +1113,29 @@ void builder(player p[], u8 goveror)
                 //check blackmarket
                 u8 blackMarketLimit = 0;
                 if (p[nowPlaying].blackMarket)
-                    blackMarketLimit = MIN(2, p[nowPlaying].blackMarket);
-                while ((p[nowPlaying].cardCount + blackMarketLimit != 0) && (choice > p[nowPlaying].cardCount + 1 || choice < 1 || !(p[nowPlaying].cardCount + blackMarketLimit > (p[nowPlaying].hand[choice - 1].cost - costdown))))
+                    blackMarketLimit = MIN(2, p->productsCount);
+                if (choice != p[nowPlaying].cardCount + 1)
                 {
-                    if (choice > p[nowPlaying].cardCount + 1 || choice < 1)
-                        INVALID
-                    else
-                        printf("%s", notEnoughCard[language]);
-                    setbuf(stdin, NULL);
-                    choice = -1;
-                    costdown = originalCostdown;
-                    scanf("%hhd", &choice);
-                    if (p[nowPlaying].quarry && choice >= 1 && choice <= p[nowPlaying].cardCount)
-                        if (p[nowPlaying].hand[choice - 1].id > 4)
-                            costdown++;
-                    if (p[nowPlaying].smithy && choice >= 1 && choice <= p[nowPlaying].cardCount)
-                        if (p[nowPlaying].hand[choice - 1].id <= 4)
-                            costdown++;
+                    while ((p[nowPlaying].cardCount + blackMarketLimit != 0) && (choice > p[nowPlaying].cardCount + 1 || choice < 1 || !(p[nowPlaying].cardCount + blackMarketLimit > (p[nowPlaying].hand[choice - 1].cost - costdown))))
+                    {
+                        if (choice > p[nowPlaying].cardCount + 1 || choice < 1)
+                            INVALID
+                        else
+                            printf("%s", notEnoughCard[language]);
+                        setbuf(stdin, NULL);
+                        choice = -1;
+                        costdown = originalCostdown;
+                        scanf("%hhd", &choice);
+                        if (p[nowPlaying].quarry && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                            if (p[nowPlaying].hand[choice - 1].id > 4)
+                                costdown++;
+                        if (p[nowPlaying].smithy && choice >= 1 && choice <= p[nowPlaying].cardCount)
+                            if (p[nowPlaying].hand[choice - 1].id <= 4)
+                                costdown++;
+                    }
+                    if (p[nowPlaying].cardCount == 0)
+                        choice = 1;
                 }
-                if (p[nowPlaying].cardCount == 0)
-                    choice = 1;
-
                 CLEAN
                 if (!(p[nowPlaying].cardCount + 1 == choice))
                 {
@@ -1105,8 +1146,8 @@ void builder(player p[], u8 goveror)
                     u8 emptySlot = 0;
                     while (p[nowPlaying].board[emptySlot].place != 0)
                         emptySlot++;
-                    p[nowPlaying].board[emptySlot] = p[nowPlaying].hand[played];
-                    p[nowPlaying].board[emptySlot].place = 3;
+                    card tmp = p[nowPlaying].hand[played];
+
                     card empty = {0};                                                             //to reset moved card
                     p[nowPlaying].hand[played] = empty;                                           //reset moved last card
                     p[nowPlaying].hand[played] = p[nowPlaying].hand[p[nowPlaying].cardCount - 1]; //take player's last card and place it in the empty spot
@@ -1123,7 +1164,7 @@ void builder(player p[], u8 goveror)
                             {
                                 const string payWithProduct[2] = {"Pay with products", "使用貨品支付"};
                                 bmChoice = 1;
-                                printf("%d)%s", p[nowPlaying].cardCount + 1, payWithProduct[language]);
+                                printf("%d)%s\n", p[nowPlaying].cardCount + 1, payWithProduct[language]);
                             }
 
                             printf("%s (%d/%d)\n", whatToPay[language], i + 1, cardCost);
@@ -1142,7 +1183,7 @@ void builder(player p[], u8 goveror)
 
                                 const string cantSell[2] = {"This building has no product.", "此建築物沒有貨品"};
                                 printPlayerBoard(&p[nowPlaying]);
-                                printf("%d)%s", p[nowPlaying].boardCount + 1, goback[language]);
+                                printf("%d)%s\n", p[nowPlaying].boardCount + 1, goback[language]);
                                 printf("%s\n", whatToPay[language]);
                                 discard = -1;
                                 scanf("%hhd", &discard);
@@ -1175,6 +1216,8 @@ void builder(player p[], u8 goveror)
                         }
                         CLEAN
                     }
+                    p[nowPlaying].board[emptySlot] = tmp;
+                    p[nowPlaying].board[emptySlot].place = 3;
                     p[nowPlaying].boardCount++;
                     printf("%s %s\n\n", built[language], p[nowPlaying].board[emptySlot].cardName);
                     if (p[nowPlaying].board[emptySlot].id > 4)
@@ -1279,6 +1322,7 @@ void builder(player p[], u8 goveror)
         poorHouse(&p[nowPlaying]);
         nowPlaying++;
         nowPlaying %= playercnt;
+        SLEEP
     }
 }
 void producer(player p[], u8 goveror)
@@ -1400,6 +1444,7 @@ void producer(player p[], u8 goveror)
             well(&p[nowPlaying]);
         nowPlaying++;
         nowPlaying %= playercnt;
+        SLEEP
     }
 }
 void trader(player p[], u8 goveror)
@@ -1499,6 +1544,7 @@ void trader(player p[], u8 goveror)
         marketHall(&p[nowPlaying]);
         nowPlaying++;
         nowPlaying %= playercnt;
+        SLEEP
     }
 }
 void councilor(player p[], u8 goveror)
@@ -1581,7 +1627,7 @@ void councilor(player p[], u8 goveror)
         else
         {
             string choosed[2] = {"a card.", "了一張卡"};
-            SLEEP
+
             for (i32 i = 0; i < 1 + p[nowPlaying].extraCard; i++)
             {
                 printf("%s %d %s%s\n", CPUdraw[language][0], nowPlaying, chosedCard[language], choosed[language]);
@@ -1591,13 +1637,15 @@ void councilor(player p[], u8 goveror)
         nowPlaying++;
         nowPlaying %= playercnt;
     }
+    SLEEP
+    CLEAN
 }
 void prospector(player p[], u8 goveror)
 {
     u8 nowPlaying = goveror;
+    CLEAN
     for (i32 c = 0; c < playercnt; c++)
     {
-        goldMine(&p[nowPlaying]);
         if (nowPlaying == goveror)
         {
             if (goveror == 0)
@@ -1615,12 +1663,16 @@ void prospector(player p[], u8 goveror)
                     drawCnt++;
                 if (goveror == 0)
                     printf("%s%s\n", drew[language], deck[drawCnt].cardName);
+                else
+                    printf("CPU %d %s\n", goveror, CPUdraw[language][1]);
                 draw(&p[goveror]);
             }
         }
+        goldMine(&p[nowPlaying]);
         nowPlaying++;
         nowPlaying %= playercnt;
     }
+    SLEEP
     return;
 }
 
@@ -1641,9 +1693,10 @@ void chapel(player *p) //id 6
     const string cpuChapel[2] = {"put a card under chapel", "將一張牌放在禮拜堂底下"};
     for (i32 i = 0; i < p->boardCount; i++)
     {
-        CLEAN
+
         if (p->playerOrder == 0 && p->board[i].id == 6)
         {
+            CLEAN
             printf("%s\n", effect[language]);
             u8 use = -1;
             scanf("%hhd", &use);
@@ -1670,7 +1723,7 @@ void chapel(player *p) //id 6
         }
         else if (p->playerOrder != 0 && p->board[i].id == 6)
         {
-
+            CLEAN
             for (i32 j = 0; j < p->cardCount; j++)
             {
                 if (p->hand[j].cost < 3 && p->hand[j].vp < 3)
@@ -1847,17 +1900,19 @@ void goldMine(player *p) //id 20
         u8 costTag[6] = {0};
         if (cardLeftInDeck <= 4)
             recycleCard();
+        u8 cardCnt = 0;
         for (i32 i = 0; i < 4; i++)
         {
-            u8 cardCnt = 0;
+
             while (deck[cardCnt].place != 1)
                 cardCnt++;
             topDeck[i] = deck[cardCnt];
+            cardCnt++;
         }
         u8 foundGold = 1;
         for (i32 i = 0; i < 4; i++)
         {
-            u8 point = topDeck[i].cost;
+            u8 point = topDeck[i].cost - 1;
             if (costTag[point] == 0)
             {
                 costTag[point] = 1;
@@ -1880,17 +1935,17 @@ void goldMine(player *p) //id 20
                 for (i32 i = 0; i < 4; i++)
                 {
                     printf("%d)%s\n", i + 1, topDeck[i].cardName);
-                    printf("%s\n", chooseOne[language]);
-                    u8 choice = -1;
-                    scanf("%hhd", &choice);
-                    while (choice > 4 || choice < 1)
-                    {
-                        INVALID
-                        choice = -1;
-                        scanf("%hhd", &choice);
-                    }
-                    giveCard(p, topDeck[choice]);
                 }
+                printf("%s\n", chooseOne[language]);
+                u8 choice = -1;
+                scanf("%hhd", &choice);
+                while (choice > 4 || choice < 1)
+                {
+                    INVALID
+                    choice = -1;
+                    scanf("%hhd", &choice);
+                }
+                giveCard(p, topDeck[choice - 1]);
             }
         }
         else

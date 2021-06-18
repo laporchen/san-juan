@@ -13,8 +13,10 @@
 #define u32 uint32_t
 #define i64 int64_t
 #define u64 uint64_t
-#define CLEAN printf("\e[1;1H\e[2J");
-#define MIN(a,b) (((a)<(b))?(a):(b))
+#define CLEAN                    \
+    printf("------------------"); \
+    printf("\e[1;1H\e[2J");
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 typedef char string[600];
 typedef struct _card
 {
@@ -58,7 +60,7 @@ typedef struct _player
     u8 blackMarket;
 } player;
 
-typedef struct _savefile 
+typedef struct _savefile
 {
     char header[2];
     u8 playerCount;
