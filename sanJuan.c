@@ -256,11 +256,8 @@ void GameEnd()
     int buf1 = getchar();
     int buf2 = getchar();
     {
-        language = 1;
         playercnt = -1;
         cardLeftInDeck = DECKSIZE;
-        GAMEEND = 12;
-        cpuLevel = 1;
         gameIsLoaded = 0;
         loadedOrder = 255;
         gameProgressing = 1;
