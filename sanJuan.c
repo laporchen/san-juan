@@ -1431,7 +1431,6 @@ void producer(player p[], u8 goveror)
                     }
                     else
                     {
-                        printf("%d\n", best);
                         produce(&p[nowPlaying], best);
                         printf("%s %d %s %s\n", CPUdraw[language][0], nowPlaying, produceText[language], productName[language][p[nowPlaying].board[best].cost - 1]); //use cost to decide the name since all the cost is different for the five buildings
                         isProduce = 1;
