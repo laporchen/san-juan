@@ -1639,7 +1639,7 @@ void councilor(player p[], u8 goveror)
 void prospector(player p[], u8 goveror)
 {
     u8 nowPlaying = goveror;
-    CLEAN
+    
     for (i32 c = 0; c < playercnt; c++)
     {
         if (nowPlaying == goveror)
@@ -1668,7 +1668,9 @@ void prospector(player p[], u8 goveror)
         nowPlaying++;
         nowPlaying %= playercnt;
     }
+    
     SLEEP
+    CLEAN
     return;
 }
 

@@ -241,9 +241,15 @@ void editHand(player *p, card d[110], card dis[110])
         {
 
             char *limit[2] = {"Error. Hand limit is 20 cards\n", "錯誤 手牌上限為20張牌\n"};
+            char *no[2] = {"Error. Deck has no card\n", "錯誤 牌組中沒有牌\n"};
             if (p->cardCount == 20)
             {
                 printf("%s", limit[lang]);
+                continue;
+            }
+            if(deckSize == 0)
+            {
+                printf("%s\n", no[lang]);
                 continue;
             }
             addCard(p, d);
@@ -282,9 +288,15 @@ void editBoard(player *p, card d[110], card dis[110])
         {
 
             char *limit[2] = {"Error. Board limit is 20 cards\n", "錯誤 場地上限為20張牌\n"};
+            char *no[2] = {"Error. Deck has no card\n", "錯誤 牌組中沒有牌\n"};
             if (p->boardCount == 12)
             {
                 printf("%s", limit[lang]);
+                continue;
+            }
+            if(deckSize == 0)
+            {
+                printf("%s\n", no[lang]);
                 continue;
             }
             addBoard(p, d);
