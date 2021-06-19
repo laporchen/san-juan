@@ -4,7 +4,7 @@
 #define PRINTDECK                                                                   \
     for (i32 i = 0; i < 110; i++)                                                   \
     {                                                                               \
-        printf("%s %d %d id:%d\n", deck[i].cardName, i, deck[i].place, deck[i].id); \
+        printf("%s index:%d place:%d id:%d cost:%d\n", deck[i].cardName, i, deck[i].place, deck[i].id,deck[i].cost); \
     }
 #define DECKSIZE 110
 #define INVALID printf("%s", invalid[language]);
