@@ -44,7 +44,7 @@ typedef struct _player
     u8 cardCount;
     u8 maxCard;
     u8 boardCount;
-    card hand[20];
+    card hand[30];
     card board[15];
     u8 point;
     u8 playerOrder;
