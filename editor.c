@@ -397,6 +397,7 @@ void addBoard(player *p, card c[110])
 {
     char *chooseOne[2] = {"Choose a card to add to your board\n", "選擇一張卡加入場上\n"};
     printDeck(c);
+    printf("%s", chooseOne[lang]);
     u8 choice = -1;
     scanf("%hhd", &choice);
     while (choice > deckSize || choice < 1)

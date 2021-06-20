@@ -193,6 +193,8 @@ void mainGame()
         }
         for (i32 i = 0; i < playercnt; i++)
             chapel(&players[(nowPlaying + i) % playercnt]);
+        SLEEP
+        CLEAN
         for (i32 c = 0; c < playercnt; c++) //reduce cards
             reduceCard(&players[c]);
 
@@ -1800,8 +1802,6 @@ void chapel(player *p) //id 6
             }
         }
     }
-    SLEEP
-    CLEAN
 }
 void smithy(player *p) //id 7
 {
@@ -1993,11 +1993,11 @@ void goldMine(player *p) //id 20
         {
             if (!foundGold)
             {
-                printf("%s%s\n", you[language], effect[language][1]);
+                printf("%s%s\n\n", you[language], effect[language][1]);
             }
             else
             {
-                printf("%s%s\n", you[language], effect[language][0]);
+                printf("%s%s\n\n", you[language], effect[language][0]);
                 for (i32 i = 0; i < 4; i++)
                 {
                     printf("%d)%s\n", i + 1, topDeck[i].cardName);
@@ -2017,10 +2017,10 @@ void goldMine(player *p) //id 20
         else
         {
             if (!foundGold)
-                printf("CPU %d %s\n", p->playerOrder, effect[language][1]);
+                printf("CPU %d %s\n\n", p->playerOrder, effect[language][1]);
             else
             {
-                printf("CPU %d %s\n", p->playerOrder, effect[language][0]);
+                printf("CPU %d %s\n\n", p->playerOrder, effect[language][0]);
                 draw(p);
             }
         }
