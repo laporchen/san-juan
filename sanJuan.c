@@ -1759,7 +1759,6 @@ void chapel(player *p) //id 6
     const string cpuChapel[2] = {"put a card under chapel", "將一張牌放在禮拜堂底下"};
     for (i32 i = 0; i < p->boardCount; i++)
     {
-
         if (p->playerOrder == 0 && p->board[i].id == 6)
         {
             CLEAN
@@ -1784,7 +1783,9 @@ void chapel(player *p) //id 6
                 choice = -1;
                 scanf("%hhd", &choice);
             }
-            discardCard(p, choice - 1);
+            p->hand[choice - 1] = p->hand[p->cardCount - 1];
+            p->hand[p->cardCount - 1] = empty;
+            p->cardCount--;
             p->board[i].extraValue++;
         }
         else if (p->playerOrder != 0 && p->board[i].id == 6 && p->cardCount >= 1)
@@ -1795,7 +1796,10 @@ void chapel(player *p) //id 6
                 if (p->hand[j].cost < 3 && p->hand[j].vp < 3)
                 {
                     printf("CPU %d %s\n", p->playerOrder, cpuChapel[language]);
-                    discardCard(p, j);
+                    card empty = {0};
+                    p->hand[j] = p->hand[p->cardCount - 1];
+                    p->hand[p->cardCount - 1] = empty;
+                    p->cardCount--;
                     p->board[i].extraValue++;
                     break;
                 }
